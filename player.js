@@ -1,9 +1,157 @@
 /**
  * 
- * Html5CanvasPlayer v1.1
+ * Html5CanvasPlayer v2.0
  * Copyright (c) 2014 dianbin lee
  *
  */
+
+
+( function( window, $, undefined ){
+	var html5Player = {};
+	html5Player.version = "2.0";
+	
+	
+	var Events = html5Player.events = {
+		on : function( name, callback, context ){
+			this._events || ( this._events = [] );
+			var events = this._events[name] || ( this._events[name] = [] );
+			events.push({callback: callback, context: context, ctx: context || this});
+			return this;
+		},
+		
+		off : function(name, callback, context){
+			if (!this._events ) return this;
+			
+			//如果参数为空则删除所有事件
+			if (!name && !callback && !context) {
+				this._events = void 0;
+				return this;
+			}
+			
+			//如果没有此name的事件，则返回
+			var events = this._events[name];
+			if(!events) return this;
+			
+			//如果只有name则删除此name的所有事件
+			if(!callback && !context){
+				delete this._events[name];
+				return this;
+			}
+			
+			 // Find any remaining events.
+	        var remaining = [];
+	        for (var j = 0, k = events.length; j < k; j++) {
+	        	var event = events[j];
+	        	
+	        	
+	        	//这的判断有问题
+	        	if (  callback && callback !== event.callback   ||  context && context !== event.context  ) {
+	        		remaining.push(event);
+	        	}
+	        	
+	        }
+
+	        // Replace events if there are any remaining.  Otherwise, clean up.
+	        if (remaining.length) {
+	          this._events[name] = remaining;
+	        } else {
+	          delete this._events[name];
+	        }
+			
+	        return this;
+			
+		},
+		
+		//触发事件
+		trigger: function(name) {
+		    if (!this._events) return this;
+		    console.info(arguments);
+		    var args = Array.prototype.slice.call(arguments,1);
+		    //if (!eventsApi(this, 'trigger', name, args)) return this;
+		    var events = this._events[name];
+		    //var allEvents = this._events.all;
+		    if (events) triggerEvents(events, args);
+		    //if (allEvents) triggerEvents(allEvents, arguments);
+		    return this;
+		}
+			
+	};
+	
+	//触发事件
+	var triggerEvents = function(events, args) {
+		var i = -1, l = events.length, a1 = args[0], a2 = args[1], a3 = args[2];
+	    
+		switch (args.length) {
+			case 0: 
+				while (++i < l){
+					var f = function(ev){
+						return function(){ ev.callback.call(ev.ctx); };
+					}(events[i]);
+					setTimeout(f,0);
+	      		} 	
+				return;
+				
+			case 1: 
+				while (++i < l){
+					var f = function(ev,a1){
+						return function(){ 
+							ev.callback.call(ev.ctx, a1); 
+						};
+					}(events[i],a1);
+					setTimeout(f,0);
+				}  
+				return;
+			case 2: 
+				while (++i < l){
+					var f = function(ev,a1,a2){
+						return function(){ 
+							ev.callback.call(ev.ctx, a1, a2); 
+						};
+					}(events[i],a1,a2);
+					setTimeout(f,0);
+				} 
+				return;
+			case 3: 
+				while (++i < l){
+					var f = function(ev, a1, a2, a3){
+						return function(){ 
+							ev.callback.call(ev.ctx, a1, a2, a3); 
+						};
+					}(events[i],a1,a2,a3);
+					setTimeout(f,0);
+				} 
+				return;
+			default: 
+				while (++i < l){
+					var f = function(ev, args){
+						return function(){ 
+							ev.callback.apply(ev.ctx, args); 
+						};
+					}(events[i],args);
+					setTimeout(f,0);
+				}  
+				return;
+	    }
+	};
+
+	window.player = html5Player;
+   
+	player.events.on("pause",function(a){console.log(a+1);});
+	player.events.on("aaa",function(a){console.log(a+2);});
+	player.events.on("start",function(a){for(var i=0;i<100000;i++);console.log(a+3);});
+	player.events.on("stop",function(a){console.log(a+4);});
+	player.events.on("over",function(a){console.log(a+5);});
+	player.events.on("aaa",function(a){console.log(a+6);});
+	
+	player.events.trigger("pause",1);
+	player.events.trigger("start",1);
+	player.events.trigger("stop",111);
+	player.events.trigger("aaa",10);
+	player.events.off("aaa",function(a){console.log(a+6);});
+	
+} )( window, $);
+
+/*
 function player(viewId,audioId){
 	var p = this;
 	this.version = "1.1";
@@ -32,19 +180,7 @@ function player(viewId,audioId){
 		loadAudio : function(){
 			p.audio.src = p.header.voice;
 			p.audio.load();
-			/*
-			p.audio.addEventListener("waiting",function(){
-				//alert("wait!");
-				p.changeState("wait");
-			});
-			p.audio.addEventListener("pause", function(){
-				alert("pause");
-			});
-			p.audio.addEventListener("playing", function(){
-				alert("playing");
-				p.changeState("play");
-			});
-			*/
+			
 		},
 		audioCanPlay : function(){
 			if( p.audio.canPlayType("audio/mpeg")=="" ){
@@ -572,3 +708,4 @@ function player(viewId,audioId){
 	
 	p.initView();
 };
+*/
