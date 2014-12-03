@@ -133,24 +133,101 @@
 				return;
 	    }
 	};
-
+	
+	
+	
+	var View = html5Player.view = {
+		init:function(){
+			this.initialize();
+		},
+		initialize:function(){
+			
+		}
+	
+	};
+	
+	//资源 用于加载图片等资源
+	var RS = html5Player.rs = {
+		init:function(){
+			this.initialize();
+		},
+		initialize:function(){
+			
+		}
+	
+	};
+	
+	
+	//播放器的内核，用于解析html
+	var Kernel = html5Player.kernel = {
+		
+	};
+	
+	
+	
+	//应用程序的入口 
+	var run  = html5Player.init = function(){
+		View.init();
+		RS.init();
+	};
+	
+	//继承方法
+	var Extend =  function ( source ) {
+		var target = this;
+		for (var p in source) {
+			if (source.hasOwnProperty(p)) {
+				target[p] = source[p];
+		    }
+		}	    
+		return target;
+	};
+	
+	View.extend = RS.extend = Events.extend = Extend;
+	
 	window.player = html5Player;
    
-	player.events.on("pause",function(a){console.log(a+1);});
-	player.events.on("aaa",function(a){console.log(a+2);});
-	player.events.on("start",function(a){for(var i=0;i<100000;i++);console.log(a+3);});
-	player.events.on("stop",function(a){console.log(a+4);});
-	player.events.on("over",function(a){console.log(a+5);});
-	player.events.on("aaa",function(a){console.log(a+6);});
-	
-	player.events.trigger("pause",1);
-	player.events.trigger("start",1);
-	player.events.trigger("stop",111);
-	player.events.trigger("aaa",10);
-	player.events.off("aaa",function(a){console.log(a+6);});
-	
 } )( window, $);
+//----------------------------------
 
+player.view.extend({
+	initialize:function(){
+		alert("view--extend--init");
+	}
+});
+player.rs.extend({
+	initialize:function(){
+		alert("RS--extend--init");
+	}
+});
+
+
+
+player.init();
+
+
+console.log("----test-----");
+var fun = function(a){console.log(a+6);};
+
+player.events.on("pause",function(a){console.log(a+1);});
+player.events.on("aaa",function(a){console.log(a+2);});
+player.events.on("start",function(a){for(var i=0;i<100000;i++);console.log(a+3);});
+player.events.on("stop",function(a){console.log(a+4);});
+player.events.on("over",function(a){console.log(a+5);});
+
+player.events.on("aaa",fun,fun);
+
+//player.events.trigger("pause",1);
+//player.events.trigger("start",1);
+//player.events.trigger("stop",111);
+player.events.trigger("aaa",10);
+player.events.off("aaa",fun,window);
+console.log("-----");
+player.events.trigger("aaa",10);
+console.log("----test--end---");
+
+
+
+//旧版代码
 /*
 function player(viewId,audioId){
 	var p = this;
