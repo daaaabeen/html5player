@@ -10,8 +10,13 @@
 	var html5Player = {};
 	html5Player.version = "2.0";
 	
-	
+	//使用这个对像实现消息绑定与触发
 	var Events = html5Player.events = {
+			
+		/**
+		 * 绑定某个方法到某个消息上
+		 * name：消息名称  callback：回调函数  context：执行上下文，也就是调用此回调函数的对象
+		 */
 		on : function( name, callback, context ){
 			this._events || ( this._events = [] );
 			var events = this._events[name] || ( this._events[name] = [] );
@@ -19,6 +24,14 @@
 			return this;
 		},
 		
+		
+		/**
+		 * 删除某个绑定的事件，如果函数都为空则全部删除 ，如果只有name则指删除此name的事件
+		 * @param name 消息名
+		 * @param callback 回调函数
+		 * @param context 上下文
+		 * 
+		 */
 		off : function(name, callback, context){
 			if (!this._events ) return this;
 			
@@ -38,20 +51,19 @@
 				return this;
 			}
 			
-			 // Find any remaining events.
+			// 查找剩余的事件
 	        var remaining = [];
 	        for (var j = 0, k = events.length; j < k; j++) {
 	        	var event = events[j];
 	        	
-	        	
-	        	//这的判断有问题
+	        	//将事件不一样的保存下来
 	        	if (  callback && callback !== event.callback   ||  context && context !== event.context  ) {
 	        		remaining.push(event);
 	        	}
 	        	
 	        }
 
-	        // Replace events if there are any remaining.  Otherwise, clean up.
+	        // 将剩余的事件替换到_events列表中，若没有剩余则 全部清除
 	        if (remaining.length) {
 	          this._events[name] = remaining;
 	        } else {
@@ -62,22 +74,23 @@
 			
 		},
 		
-		//触发事件
+		/**
+		 * 触发一个事件,异步的
+		 * @param name
+		 * @returns {___anonymous235_2220}
+		 */
 		trigger: function(name) {
 		    if (!this._events) return this;
 		    console.info(arguments);
 		    var args = Array.prototype.slice.call(arguments,1);
-		    //if (!eventsApi(this, 'trigger', name, args)) return this;
 		    var events = this._events[name];
-		    //var allEvents = this._events.all;
 		    if (events) triggerEvents(events, args);
-		    //if (allEvents) triggerEvents(allEvents, arguments);
 		    return this;
 		}
 			
 	};
 	
-	//触发事件
+	//异步的触发事件
 	var triggerEvents = function(events, args) {
 		var i = -1, l = events.length, a1 = args[0], a2 = args[1], a3 = args[2];
 	    
@@ -192,7 +205,8 @@
 player.view.extend({
 	initialize:function(){
 		alert("view--extend--init");
-	}
+	},
+	
 });
 player.rs.extend({
 	initialize:function(){
@@ -200,9 +214,9 @@ player.rs.extend({
 	}
 });
 
-
-
 player.init();
+
+
 
 
 console.log("----test-----");
