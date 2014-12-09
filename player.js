@@ -156,32 +156,91 @@
 		initialize:function(){
 			
 		}
+		
 	
 	};
 	
-	//资源 用于加载图片等资源
-	var RS = html5Player.rs = {
-		init:function(){
-			this.initialize();
-		},
-		initialize:function(){
-			
-		}
 	
-	};
 	
 	
 	//播放器的内核，用于解析html
 	var Kernel = html5Player.kernel = {
+		
+		init : function( canvas_obj, audio_obj ){
+			this._audio = audio_obj;
+			this._canvas = canvas_obj;
+		},
+		control : {
+			
+			//开始播放
+			start:function(url,success){
+				
+			},
+			
+			//停止
+			stop:function(success){
+				
+			},
+			
+			//播放
+			play:function(success){
+				
+			},
+			
+			//暂停
+			pause:function(success){
+				
+			},
+			
+			//缓冲
+			wait:function(success){
+				
+			},
+			
+			//静音
+			mute:function(success){
+				
+			},
+			
+			//设置声音
+			set_volume:function(val, success){
+				
+			},
+			
+			//设置播放进度
+			set_process:function(val, success){
+				
+			}
+			
+			
+			
+			
+		},
+		
+		//资源 用于加载图片等资源
+		rs : {
+			trail:{},
+			init:function(url){
+				Events.trriger("Kerner:RS:init");
+				$.ajax({
+					
+				});
+			},
+			
+		
+		
+		}
 		
 	};
 	
 	
 	
 	//应用程序的入口 
-	var run  = html5Player.init = function(){
+	var run  = html5Player.init = function( canvasID ,audioID ){
+		
 		View.init();
-		RS.init();
+		Kernel.init( $("#"+canvasID), $("#"+audioID) );
+	
 	};
 	
 	//继承方法
@@ -195,7 +254,7 @@
 		return target;
 	};
 	
-	View.extend = RS.extend = Events.extend = Extend;
+	View.extend = Events.extend = Extend;
 	
 	window.player = html5Player;
    
@@ -207,11 +266,6 @@ player.view.extend({
 		alert("view--extend--init");
 	},
 	
-});
-player.rs.extend({
-	initialize:function(){
-		alert("RS--extend--init");
-	}
 });
 
 player.init();
