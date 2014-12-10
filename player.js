@@ -80,6 +80,7 @@
 		 * @returns {___anonymous235_2220}
 		 */
 		trigger: function(name) {
+			console.log("trigger->"+name);
 		    if (!this._events) return this;
 		    console.info(arguments);
 		    var args = Array.prototype.slice.call(arguments,1);
@@ -152,9 +153,23 @@
 	var View = html5Player.view = {
 		init:function(){
 			this.initialize();
+			//Events.on("Kernel:RS:inited",this.play);
 		},
 		initialize:function(){
 			
+		},
+		
+		start:function(){
+			var url = "./trail1411451320";
+			var fun = function(){
+				this.play();
+			}.bind(this);
+			
+			Events.trigger("Kernel:Control:start",url,fun);
+		},
+		
+		play:function(){
+			Events.trigger("Kernel:Control:play");
 		}
 		
 	
@@ -165,36 +180,59 @@
 	
 	//播放器的内核，用于解析html
 	var Kernel = html5Player.kernel = {
+			
+		_code:{ init:0, play:1, pause:2, wait:3, stop:4 },
 		
 		init : function( canvas_obj, audio_obj ){
 			this._audio = audio_obj;
 			this._canvas = canvas_obj;
+			
+			Events.on("Kernel:Control:start",Kernel.control.start);
+			Events.on("Kernel:Control:play",Kernel.control.play);
+			
 		},
+		
+		//日志对象
+		logger : {
+			write:function(msg){
+				console.log(msg);
+			}
+		},
+		
+		//对外提供的控制接口
 		control : {
+			
+			change_status:function(status){
+				Kernel._status = status;
+			},
 			
 			//开始播放
 			start:function(url,success){
-				
+				this.change_status(Kernel.code.init);
+				Kernel.rs.init(url);
+				success();
+			
 			},
 			
 			//停止
 			stop:function(success){
-				
+				this.change_status(Kernel.code.stop);
 			},
 			
 			//播放
 			play:function(success){
-				
+				this.change_status(Kernel.code.play);
+				console.log("Kernel.control.play");
 			},
 			
 			//暂停
 			pause:function(success){
-				
+				this.change_status(Kernel.code.pause);
 			},
 			
 			//缓冲
 			wait:function(success){
-				
+				this.change_status(Kernel.code.wait);
 			},
 			
 			//静音
@@ -211,35 +249,102 @@
 			set_process:function(val, success){
 				
 			}
-			
-			
-			
-			
+				
 		},
+		//control
+		
 		
 		//资源 用于加载图片等资源
 		rs : {
-			trail:{},
+			_trail:{},
+			_img : [],
 			init:function(url){
-				Events.trriger("Kerner:RS:init");
+				if(this._hasinited)return ;
+				console.log("<source src=\""+url+"/audio.mp3\" type=\"audio/mpeg\">");
+				Kernel._audio.html("<source src=\""+url+"/audio.mp3\" type=\"audio/mpeg\">");
 				$.ajax({
-					
+					url:url+"/trail.json",
+					dataType:"json",
+					async : false,
+					success:function(data){
+						console.log(data);
+						Kernel.rs._trail = data;
+					}
 				});
+				this._hasinited = true;
 			},
 			
+			reset:function(){
+				this._hasinited = void 0;
+				this._trail = {};
+				this._img = [];
+			}
+			
+		},
+		//rs
+		
+		//声音
+		audio:{
+			p : Kernel._audio,
+			
+			play : function(){
+				this.p.play();
+			},
+			
+			pause : function(){
+				this.p.pause();
+			},
+			
+			can_play : function(){
+				return this.p.readyState == 4 ? true : false;
+			},
+			
+			//当前时间
+			current_time : function(){
+				return this.p.currentTime;
+			},
+			set_current_time : function(t){
+				this.p.currentTime = t;
+			},
+			
+			//静音
+			mute : function(){
+				this.p.muted = true;
+			},
+			unmute : function(){
+				this.p.muted = false;
+			},
+			
+			//声音
+			volume : function(){
+				return this.p.volume;
+			},
+			set_volume : function(val){
+				this.p.volume = val;
+			}
+			
+			
+		},
+		//audio
 		
 		
+		//白板
+		board:{
+			p : Kernel._canvas,
+			
 		}
+		//board
+		
 		
 	};
 	
 	
 	
 	//应用程序的入口 
-	var run  = html5Player.init = function( canvasID ,audioID ){
+	var run  = html5Player.init = function( canvas ,audio ){
 		
 		View.init();
-		Kernel.init( $("#"+canvasID), $("#"+audioID) );
+		Kernel.init( $(canvas), $(audio) );
 	
 	};
 	
@@ -264,11 +369,14 @@
 player.view.extend({
 	initialize:function(){
 		alert("view--extend--init");
+		$("#play").click(function(){
+			this.start();
+		}.bind(this));
 	},
 	
 });
 
-player.init();
+player.init("#myCanvas","#audio");
 
 
 
