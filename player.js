@@ -180,15 +180,17 @@
 	
 	//播放器的内核，用于解析html
 	var Kernel = html5Player.kernel = {
-			
+		_audio : null,
+		_canvas : null,	
 		_code:{ init:0, play:1, pause:2, wait:3, stop:4 },
 		
 		init : function( canvas_obj, audio_obj ){
 			this._audio = audio_obj;
 			this._canvas = canvas_obj;
-			
-			Events.on("Kernel:Control:start",Kernel.control.start);
-			Events.on("Kernel:Control:play",Kernel.control.play);
+			this.audio.init(audio_obj);
+			this.board.init(canvas_obj);
+			Events.on("Kernel:Control:start", Kernel.control.start, Kernel.control);
+			Events.on("Kernel:Control:play", Kernel.control.play, Kernel.control);
 			
 		},
 		
@@ -202,13 +204,15 @@
 		//对外提供的控制接口
 		control : {
 			
+			//更改播放器的状态
 			change_status:function(status){
-				Kernel._status = status;
+				this._last_status = this._status;
+				this._status = status;
 			},
 			
 			//开始播放
 			start:function(url,success){
-				this.change_status(Kernel.code.init);
+				this.change_status(Kernel._code.init);
 				Kernel.rs.init(url);
 				success();
 			
@@ -216,23 +220,37 @@
 			
 			//停止
 			stop:function(success){
-				this.change_status(Kernel.code.stop);
+				this.change_status(Kernel._code.stop);
 			},
 			
 			//播放
 			play:function(success){
-				this.change_status(Kernel.code.play);
+				this.change_status(Kernel._code.play);
 				console.log("Kernel.control.play");
+				Kernel.audio.play();
+				var run = setInterval(function(){
+					//判断是否可以播放
+					if( !Kernel.audio.can_play() ){//不能正常播放需要缓冲
+						
+						
+					}else{//可以正常播放
+						var c_t = Kernel.audio.current_time();//当前播放到的事件
+					}
+					
+					
+				},50);
+				
+				
 			},
 			
 			//暂停
 			pause:function(success){
-				this.change_status(Kernel.code.pause);
+				this.change_status(Kernel._code.pause);
 			},
 			
 			//缓冲
 			wait:function(success){
-				this.change_status(Kernel.code.wait);
+				this.change_status(Kernel._code.wait);
 			},
 			
 			//静音
@@ -285,42 +303,45 @@
 		
 		//声音
 		audio:{
-			p : Kernel._audio,
-			
+			//初始化
+			init:function(audio_obj){
+				//_p是audio播放器的对象
+				this._p = audio_obj;
+			},
 			play : function(){
-				this.p.play();
+				this._p.play();
 			},
 			
 			pause : function(){
-				this.p.pause();
+				this._p.pause();
 			},
 			
 			can_play : function(){
-				return this.p.readyState == 4 ? true : false;
+				return this._p.readyState == 4 ? true : false;
 			},
 			
 			//当前时间
 			current_time : function(){
-				return this.p.currentTime;
+				return this._p.currentTime;
 			},
 			set_current_time : function(t){
-				this.p.currentTime = t;
+				this._p.currentTime = t;
 			},
 			
 			//静音
 			mute : function(){
-				this.p.muted = true;
+				this._p.muted = true;
 			},
 			unmute : function(){
-				this.p.muted = false;
+				this._p.muted = false;
 			},
 			
 			//声音
 			volume : function(){
-				return this.p.volume;
+				return this._p.volume;
 			},
 			set_volume : function(val){
-				this.p.volume = val;
+				this._p.volume = val;
 			}
 			
 			
@@ -330,7 +351,14 @@
 		
 		//白板
 		board:{
-			p : Kernel._canvas,
+			init:function(canvas_obj){
+				this._p = canvas_obj;
+			},
+			
+			//播放到这个时间点
+			draw:function( t ){
+				
+			}
 			
 		}
 		//board
@@ -341,10 +369,10 @@
 	
 	
 	//应用程序的入口 
-	var run  = html5Player.init = function( canvas ,audio ){
+	var run  = html5Player.init = function( canvas_id ,audio_id ){
 		
 		View.init();
-		Kernel.init( $(canvas), $(audio) );
+		Kernel.init( document.getElementById( canvas_id ), document.getElementById( audio_id ) );
 	
 	};
 	
