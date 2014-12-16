@@ -153,6 +153,7 @@
 	
 	var View = html5Player.view = {
 		init:function(){
+			this._total_time && ( this._total_time = void 0 );
 			this.initialize();
 			//Events.on("Kernel:RS:inited",this.play);
 			Events.on("Kernel:Control:start", View.on_start, View);
@@ -160,6 +161,8 @@
 			Events.on("Kernel:Control:stop", View.on_stop, View);
 			Events.on("Kernel:Control:wait", View.on_wait, View);
 			Events.on("Kernel:Control:pause", View.on_pause, View);
+			Events.on("Kernel:rs:inited",View.on_rs_inited,View);
+			Events.on("Kernel:Control:timechange",View.on_time_change,View);
 		},
 		
 		initialize:function(){},
@@ -168,14 +171,25 @@
 		on_stop:function(){},
 		on_wait:function(){},
 		on_pause:function(){},
+		on_rs_inited:function(){},
+		on_time_change:function(){},
 		
 		//当前的状态
 		status : function(){
 			return Kernel.status();
 		},
 		
+		//当前时间
 		current_time : function(){
-			return Kernel.current_time();
+			return  Kernel.current_time();
+			
+		},
+		
+		//时长
+		total_time : function(){
+			this._total_time || ( this._total_time = Kernel.total_time() );
+			return this._total_time;
+			
 		},
 		
 		start:function(){
@@ -199,6 +213,14 @@
 		
 		pause:function(){
 			Events.trigger("Kernel:Control:pause");
+		},
+		
+		mute : function(val){
+			Kernel.mute(val);
+		},
+		
+		set_volume : function(val){
+			Kernel.set_volume(val);
 		},
 		
 	
@@ -230,6 +252,28 @@
 		current_time : function(){
 			return this.audio.current_time();
 		},
+		
+		total_time : function(){
+			return this.audio.total_time();
+		},
+		
+		mute : function(val){
+			if(val === true){
+				this.audio.mute();
+			}else{
+				this.audio.unmute();
+			}
+		},
+		
+		
+		set_volume : function(val){
+			this.audio.set_volume(val);
+		},
+		
+		volume : function(){
+			return this.audio.volume();
+		},
+		
 		
 		//日志对象
 		logger : {
@@ -307,11 +351,22 @@
 					}else{//可以正常播放
 						
 						var c_t = Kernel.audio.current_time();//当前播放到的事件
+						var now_t = Math.floor(c_t);
+						if(this._last_time !== undefined){
+							if( this._last_time != now_t ){
+								this._last_time = now_t;
+								Events.trigger("Kernel:Control:timechange",now_t);
+							}
+							
+						}else{
+							this._last_time = now_t;
+							Events.trigger("Kernel:Control:timechange",now_t);
+						}
 						Kernel.board.draw(c_t);
 						
 					}
 					
-				}.bind(this),50);
+				}.bind(this),100);
 				
 				
 			},
@@ -343,7 +398,7 @@
 			},
 			
 			//静音
-			mute:function(success){
+			mute:function( success){
 				
 			},
 			
@@ -378,7 +433,15 @@
 						Kernel.board.set_trail( data );
 					}
 				});
-				this._hasinited = true;
+				var k_rs_inited = setInterval(function(){
+					if(Kernel.audio.can_play()){
+						this._hasinited = true;
+						Events.trigger("Kernel:rs:inited");
+						clearInterval(k_rs_inited);
+					}
+					
+				}.bind(this),50);
+				
 			},
 			
 			reset:function(){
@@ -423,6 +486,11 @@
 			current_time : function(){
 				return this._p.currentTime;
 			},
+			
+			total_time : function(){
+				return this._p.duration;
+			},
+			
 			
 			set_current_time : function(t){
 				this._p.currentTime = t;
@@ -518,6 +586,64 @@ player.view.extend({
 			}
 			
 		}.bind(this));
+		
+		$("#mute").click(function(){
+			var o = $("#mute");
+			if( o.attr("data") == "on" ){
+				o.attr("data","off");
+				o.html("声音");
+				this.mute(true);
+			}else{
+				o.attr("data","on");
+				o.html("静音");
+				
+				this.mute(false) ;
+			}
+		}.bind(this));
+		
+		$("#voice-bar").mousedown(function(e){
+			this._changeVoice = true;
+			//alert($("#voice-bar").position().left);
+			
+			var width = ( e.pageX ) - ( $("#voice-bar").position().left ) ;
+			if( width< 0 ){
+				width = 0; 
+			}else if( width > $("#voice-bar").width() ){
+				width = $("#voice-bar").width();
+			}
+			//alert(width);
+			$("#current-voice").width( width );
+			this.set_volume(width / $("#voice-bar").width());
+			//alert(e.pageX + ", " + e.pageY);
+		
+		}.bind(this));
+		
+		$(document).mouseup(function(){
+			this._changeVoice = void 0;
+			//alert("22");
+		}.bind(this));
+		$(document).mousemove(function(e){
+			//alert(p.changeVoice);
+			if(this._changeVoice === true){
+				//alert(33);
+				//$("span").text(e.pageX + ", " + e.pageY);
+				var width = ( e.pageX ) - ( $("#voice-bar").position().left ) ;
+				if( width< 0 ){
+					width = 0; 
+				}else if( width > $("#voice-bar").width() ){
+					width = $("#voice-bar").width();
+				}
+				//alert(width);
+				$("#current-voice").width( width );
+				this.set_volume( width / $("#voice-bar").width() ) ;
+				
+			}
+			//$("span").text(e.pageX + ", " + e.pageY);
+			
+		}.bind(this));
+		
+
+		
 	},
 	
 	on_start:function(){
@@ -549,7 +675,36 @@ player.view.extend({
 		$("#play").attr("class","play");
 		$("#play").attr("title","播放");
 		$("#msg").html("暂停！");
-	}
+	},
+	
+	on_rs_inited:function(){
+		console.log("on_rs_inited");
+		var len = Math.floor( this.total_time() );
+		var h = Math.floor( len / 3600 ) ; //视频的时间 -小时
+		var m = Math.floor( (len % 3600) / 60 );//视频的时间 -分钟
+		var s = (len % 60);//视频的时间 -秒数
+		
+		console.log("视频长度："+len+"->"+h+":"+m+":"+s );
+		$("#total-time").html(h+":"+m+":"+s);
+	},
+	
+	on_time_change:function(now_time){
+		console.log("on_time_change");
+		console.log("new_time:"+now_time);
+		var h = Math.floor( now_time / 3600 ) ; //视频的时间 -小时
+		var m = Math.floor( ( now_time % 3600  ) / 60 );//视频的时间 -分钟
+		var s = Math.floor( now_time  % 60 );//视频的时间 -秒数
+		$("#s").html(s);							
+		$("#m").html(m);
+		$("#h").html(h);
+	
+		var cct = now_time / this.total_time() * 100;
+		if(cct>100){
+			cct = 100;
+		}
+		
+		$("#current-time").animate({ width : cct+"%" },980);
+	},
 	
 	
 	
@@ -559,7 +714,7 @@ player.init("myCanvas","audio");
 
 
 
-
+/*
 console.log("----test-----");
 var fun = function(a){console.log(a+6);};
 
@@ -579,7 +734,7 @@ player.events.off("aaa",fun,window);
 console.log("-----");
 player.events.trigger("aaa",10);
 console.log("----test--end---");
-
+*/
 
 
 //旧版代码
