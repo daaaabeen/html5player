@@ -163,6 +163,9 @@
 			Events.on("Kernel:Control:pause", View.on_pause, View);
 			Events.on("Kernel:rs:inited",View.on_rs_inited,View);
 			Events.on("Kernel:Control:timechange",View.on_time_change,View);
+			Events.on("Kernel:Control:mute_change",View.on_mute_change,View);
+			Events.on("Kernel:Control:volume_change",View.on_volume_change,View);
+			
 		},
 		
 		initialize:function(){},
@@ -173,6 +176,8 @@
 		on_pause:function(){},
 		on_rs_inited:function(){},
 		on_time_change:function(){},
+		on_mute_change:function(){},
+		on_volume_change:function(){},
 		
 		//当前的状态
 		status : function(){
@@ -216,11 +221,12 @@
 		},
 		
 		mute : function(val){
-			Kernel.mute(val);
+			Events.trigger("Kernel:Control:mute",val);
+			//Kernel.mute(val);
 		},
 		
 		set_volume : function(val){
-			Kernel.set_volume(val);
+			Events.trigger("Kernel:Control:set_volume",val);
 		},
 		
 	
@@ -241,6 +247,8 @@
 			Events.on("Kernel:Control:stop", Kernel.control.stop, Kernel.control);
 			Events.on("Kernel:Control:wait", Kernel.control.wait, Kernel.control);
 			Events.on("Kernel:Control:pause", Kernel.control.pause, Kernel.control);
+			Events.on("Kernel:Control:mute", Kernel.control.mute, Kernel.control);
+			Events.on("Kernel:Control:set_volume", Kernel.control.set_volume, Kernel.control);
 			
 		},
 		
@@ -397,14 +405,19 @@
 				}.bind(this),50);
 			},
 			
-			//静音
-			mute:function( success){
-				
+			mute : function(val){
+				if(val === true){
+					Kernel.audio.mute();
+				}else{
+					Kernel.audio.unmute();
+				}
+				Events.trigger("Kernel:Control:mute_change",val);
 			},
 			
-			//设置声音
-			set_volume:function(val, success){
-				
+			
+			set_volume : function(val){
+				Kernel.audio.set_volume(val);
+				Events.trigger("Kernel:Control:volume_change",val);
 			},
 			
 			//设置播放进度
@@ -533,10 +546,41 @@
 			//设置轨迹
 			set_trail : function(data){
 				this._trail = data;
+				this._records = this._trail.records;
+				this._index = 0;
+				this._len = this._records.length;
+				console.log("-------trail info---------");
+				console.log("records count:"+this._len);
+				console.log("now index:"+this._index);
+				console.log("-------trail info end---------");
 			},
 			//播放到这个时间点
 			draw:function( t ){
 				
+				var trail_class = null;
+				while( this._index < this._len && this._records[this._index].timestamp < t ){
+					//class: DRContextRecord / DRStrokeRecord
+					
+					trail_class = this._records[this._index].class;
+					if( trail_class == "DRContextRecord" || trail_class == "DRStrokeRecord" ){
+						this.painter.read_and_parse(this._records[this._index]);
+					}
+					console.log("class:" + trail_class);
+					this._index++;
+				}
+			},
+			
+			painter:{
+				
+				
+				
+				read_and_parse:function( obj ){
+					if( obj.class == "DRContextRecord" ){
+						
+					}else if( obj.class == "DRStrokeRecord" ){
+						
+					}
+				},
 			}
 			
 		}
@@ -572,6 +616,7 @@
    
 } )( window, $);
 //----------------------------------
+
 
 player.view.extend({
 	initialize:function(){
@@ -706,6 +751,15 @@ player.view.extend({
 		$("#current-time").animate({ width : cct+"%" },980);
 	},
 	
+	on_mute_change:function(val){
+		console.log("on_mute_change");
+		console.log("new_status:"+val);
+	},
+	
+	on_volume_change:function(val){
+		console.log("on_volume_change");
+		console.log("new_volume:"+val);
+	},
 	
 	
 });
