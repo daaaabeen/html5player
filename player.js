@@ -572,15 +572,92 @@
 			
 			painter:{
 				
-				
+				reset:function(){
+					this._painter_color = void 0;
+					this._painter_line_width = void 0;
+					this._painter_mode = void 0;
+				},
 				
 				read_and_parse:function( obj ){
 					if( obj.class == "DRContextRecord" ){
-						
+						var type = obj.type;
+						if(type == 1){//设置画笔颜色
+							
+							this.set_painter_color(obj.data);
+							
+						}else if(type == 2){//设置画笔粗细
+							this.set_painter_line_width(obj.data);
+							
+						}else if(type == 3){//设置混合模式（正常或者擦除）
+							this.set_painter_mode(obj.data);
+						}
 					}else if( obj.class == "DRStrokeRecord" ){
 						
 					}
 				},
+				
+				//设置画笔的颜色
+				set_painter_color:function(data){
+					var decimal = Math.floor( Number(data.r) * 255 ) * 65536 + Math.floor(Number(data.g) * 255 ) * 256 + Math.floor(Number(data.b) * 255 );
+					if(isNaN(decimal))decimal = 0;
+					var num = decimal.toString(16);
+					while (num.length < 6) num = "0" + num;
+					this._painter_color = "#" + num;
+					console.log("设置画笔颜色："+this._painter_color);
+				},
+				//获取画笔颜色
+				painter_color : function(){
+					return this._painter_color ? this._painter_color : "#000000";
+				},
+				
+				//设置画笔的粗细
+				set_painter_line_width:function(data){
+					this._painter_line_width = data;
+					console.log("设置画笔粗细："+this._painter_line_width);
+				},
+				painter_line_width:function(){
+					return this._painter_line_width ? this._painter_line_width : "1";
+				},
+				
+				//设置当前的混合模式  铅笔还是橡皮
+				set_painter_mode:function(data){
+					if(data == 16){
+						this._painter_mode = "erase";
+					}else{
+						this._painter_mode = "pencil";
+					}
+					console.log("设置混合模式："+this._painter_mode);
+					
+				},
+				painter_mode:function(){
+					return this._painter_mode ? this._painter_mode : "pencil";
+				},
+				/*
+				 if(p.painter.stroke.index ==0 ){
+									//alert("画一个点："+ data[it].line[index][0]+","+ data[it].line[index][1]);
+								}
+								else{
+									var cantxt = p.view.getContext("2d");
+									cantxt.lineWidth =  p.lineSize[ p.data[p.it].size ] ;
+									cantxt.strokeStyle = p.colors[p.data[p.it].color];//颜色
+									cantxt.beginPath(); 
+									cantxt.moveTo(p.data[p.it].line[p.painter.stroke.index-1][0],p.data[p.it].line[p.painter.stroke.index-1][1]); // 移动到坐标 50 50 
+									cantxt.lineTo(p.data[p.it].line[p.painter.stroke.index][0],p.data[p.it].line[p.painter.stroke.index][1]); // 划出轨迹到 150 150
+									//;//宽度
+									cantxt.stroke(); // 以线条显示轨迹
+									cantxt.closePath();
+									
+								}
+								p.painter.stroke.index++;
+								if( p.painter.stroke.index >= $(p.data[p.it].line).length ){
+									//停止绘图
+									p.painter.stroke.index =0;
+									clearInterval(draw);
+									p.painter.over();
+									
+								}
+				 * */
+				
 			}
 			
 		}
