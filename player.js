@@ -543,6 +543,11 @@
 				this._p = canvas_obj;
 			},
 			
+			//获取画板
+			canvas:function(){
+				return this._p;
+			},
+			
 			//设置轨迹
 			set_trail : function(data){
 				this._trail = data;
@@ -592,7 +597,14 @@
 							this.set_painter_mode(obj.data);
 						}
 					}else if( obj.class == "DRStrokeRecord" ){
-						
+						if( this.painter_mode() == "erase" ){
+							this.tool_erase.render(obj);
+						}else if( this.painter_mode() == "pencil" ){
+							this.tool_pencil.render(obj);
+						}else {
+							console.log("未定义的工具！");
+							console.log(obj);
+						}
 					}
 				},
 				
@@ -632,33 +644,132 @@
 				painter_mode:function(){
 					return this._painter_mode ? this._painter_mode : "pencil";
 				},
-				/*
-				 if(p.painter.stroke.index ==0 ){
-									//alert("画一个点："+ data[it].line[index][0]+","+ data[it].line[index][1]);
-								}
-								else{
-									var cantxt = p.view.getContext("2d");
-									cantxt.lineWidth =  p.lineSize[ p.data[p.it].size ] ;
-									cantxt.strokeStyle = p.colors[p.data[p.it].color];//颜色
-									cantxt.beginPath(); 
-									cantxt.moveTo(p.data[p.it].line[p.painter.stroke.index-1][0],p.data[p.it].line[p.painter.stroke.index-1][1]); // 移动到坐标 50 50 
-									cantxt.lineTo(p.data[p.it].line[p.painter.stroke.index][0],p.data[p.it].line[p.painter.stroke.index][1]); // 划出轨迹到 150 150
-									//;//宽度
-									cantxt.stroke(); // 以线条显示轨迹
-									cantxt.closePath();
-									
-								}
-								p.painter.stroke.index++;
-								if( p.painter.stroke.index >= $(p.data[p.it].line).length ){
-									//停止绘图
-									p.painter.stroke.index =0;
-									clearInterval(draw);
-									p.painter.over();
-									
-								}
-				 * */
+				
+				//画笔工具
+				tool_pencil:{
+					
+					get_context:function(stroke_id){
+						this._ctx_arr || ( this._ctx_arr = [] );
+						
+						var x;
+						for( x in this._ctx_arr ){
+							if( this._ctx_arr[x] == stroke_id ){
+								return this._ctx_arr[x];
+							}
+						}
+						
+						var contxt = Kernel.board.canvas().getContext("2d");
+						contxt.lineWidth = Kernel.board.painter.painter_line_width();
+						contxt.strokeStyle = Kernel.board.painter.painter_color();//颜色
+						contxt.strokeId = stroke_id;
+						this._ctx_arr.push(contxt);
+						return contxt;
+						
+					},
+					
+					del_context:function(stroke_id){
+						 
+						var remaining = [];
+						var x;
+						for(x in this._ctx_arr ){
+							var contxt = this._ctx_arr[x];
+							if( contxt.strokeId != stroke_id ){
+								remaining.push(contxt);
+							}
+						}
+						
+						if (remaining.length) {
+							this._ctx_arr = remaining;
+					    } else {
+					    	delete this._ctx_arr;
+					    }
+			
+					},
+					
+					render:function(data){
+						/*
+							{"class":"DRStrokeRecord", "timestamp":5.132204, "strokeId":6175405760, "phase":0, "x":561.000000, "y":229.500000},
+    				     */
+						var contxt = this.get_context(data.strokeId);
+						if( data.phase == 0 ){
+							contxt.beginPath(); 
+							contxt.moveTo( data.x, data.y ); // 移动到坐标 50 50 
+						}else if( data.phase == 1 ){
+							contxt.lineTo( data.x, data.y ); // 划出轨迹到 150 150
+							contxt.stroke();
+						}else{
+							contxt.lineTo( data.x, data.y ); // 划出轨迹到 150 150
+							contxt.stroke();
+							this.del_context(data.strokeId);
+						}
+						
+					},
+					
+				},
+				
+				
+				//橡皮工具
+				tool_erase:{
+					
+					get_context:function(stroke_id){
+						this._ctx_arr || ( this._ctx_arr = [] );
+						
+						var x;
+						for( x in this._ctx_arr ){
+							if( this._ctx_arr[x] == stroke_id ){
+								return this._ctx_arr[x];
+							}
+						}
+						
+						var contxt = Kernel.board.canvas().getContext("2d");
+						contxt.lineWidth = Kernel.board.painter.painter_line_width();
+						//contxt.strokeStyle = "#FFFFFF";//颜色
+						contxt.strokeId = stroke_id;
+						this._ctx_arr.push(contxt);
+						return contxt;
+						
+					},
+					
+					del_context:function(stroke_id){
+						 
+						var remaining = [];
+						var x;
+						for(x in this._ctx_arr ){
+							var contxt = this._ctx_arr[x];
+							if( contxt.strokeId != stroke_id ){
+								remaining.push(contxt);
+							}
+						}
+						
+						if (remaining.length) {
+							this._ctx_arr = remaining;
+					    } else {
+					    	delete this._ctx_arr;
+					    }
+			
+					},
+					
+					
+					render:function(data){
+						
+						var contxt = this.get_context(data.strokeId);
+						var w = Kernel.board.painter.painter_line_width();
+						var x = data.x - w/2;
+						var y = data.y - w/2;
+						contxt.clearRect( x, y, w, w );
+						if( data.phase == 2 ){							
+							this.del_context(data.strokeId);
+						}
+						
+						
+					}
+				},
+				//tool_erase
+				
 				
 			}
+			//painter
+			
 			
 		}
 		//board
