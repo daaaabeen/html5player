@@ -3,9 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport"  content="width=986" >
-<script type="text/javascript" src="jquery-1.9.1.js"></script>
-<script type="text/javascript" src="player.js"></script>
-<script type="text/javascript" src="newnewdata.js"></script>
+
 <title>html5电子白板播放器V1.1</title>
 <style>
 #title{height:25px;width:976px;padding:5px;line-height:25px;background:#212227;color:#FFFFFF;}
@@ -33,7 +31,7 @@
 </style>
 </head>
 <body>
-<div id="title">html5电子白板播放器V1.1</div>
+<div id="title">html5电子白板播放器V2.0</div>
 <canvas id="myCanvas" width="984" height="668" >浏览器不支持</canvas>
 <div id="timeline"><div id="current-time"></div></div>
 <div id="data-store">
@@ -67,10 +65,12 @@
 	
 	
 </div>
-<audio src="" controls="controls" id="audio">您的浏览器不能播放</audio>
-<script>
-var pl = new player("myCanvas","audio");
-</script>
+<audio controls="controls" id="audio" style="display:none;">
+	
+</audio>
+
+<script type="text/javascript" src="jquery-1.9.1.js"></script>
+<script type="text/javascript" src="player.js"></script>
 
 </body>
 </html>
