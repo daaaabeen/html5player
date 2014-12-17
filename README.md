@@ -25,4 +25,4 @@ start() play() pause() mute() set_volume() status() current_time() total_time() 
 		on_mute_change:function(){},<br>
 		on_volume_change:function(){},<br>
 		
-用户使用init()方法进行player的初始化，要求传入连个参数，第一个canvas的id 第二个是audio的id
+使用者通过init()方法进行player的初始化，要求传入两个参数，第一个canvas的id 第二个是audio的id
