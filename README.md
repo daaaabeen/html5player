@@ -21,3 +21,4 @@ start() play() pause() mute() set_volume() status() current_time() total_time()
 		on_time_change:function(){},
 		on_mute_change:function(){},
 		on_volume_change:function(){},
+		
