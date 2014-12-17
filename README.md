@@ -1,5 +1,6 @@
-html5player V2.0
-===========
+Html5CanvasPlayer v2.0
+Copyright (c) 2014 dianbin lee
+
 
 对电子白板播放器进行了重构
 使用了全新的架构
