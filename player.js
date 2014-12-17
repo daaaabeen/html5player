@@ -197,8 +197,8 @@
 			
 		},
 		
-		start:function(){
-			var url = "./trail1411451320";
+		start:function(url){
+			
 			var fun = function(){
 				this.play();
 			}.bind(this);
@@ -206,10 +206,10 @@
 			Events.trigger("Kernel:Control:start",url,fun);
 		},
 		
-		play:function(){
+		play:function(url){
 			
 			if( Kernel.status() == "nostatus"){
-				this.start();
+				this.start(url);
 			}else{
 				Events.trigger("Kernel:Control:play");
 			}
@@ -825,7 +825,8 @@ player.view.extend({
 				this.pause();
 				
 			}else{
-				this.play();
+				var url = "./trail1411451320";
+				this.play(url);
 			}
 			
 		}.bind(this));
