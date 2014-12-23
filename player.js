@@ -444,8 +444,28 @@
 					success:function(data){
 						console.log(data);
 						Kernel.board.set_trail( data );
+						//图片预加载-----------------------------------------
+						var k_rs_preload = function(record){
+							var len = record.length;
+							var i = 0;
+							var imgobj = null;
+							while( i < len ){
+								//如果是图片资源
+								if( record[i].class == "图片"){
+									imgobj = new Image();
+									imgobj.src = record[i].src;
+									imgobj.id = record[i].id;
+									Kernel.rs._img.push(imgobj);
+								}
+							}
+						}(data.record);
+						setTimeout(k_rs_preload,0);
+						//图片预加载----------------------------------------
 					}
 				});
+				
+				
+				
 				var k_rs_inited = setInterval(function(){
 					if(Kernel.audio.can_play()){
 						this._hasinited = true;
@@ -608,6 +628,8 @@
 					}else if( obj.class == "DRClearCanvasRecord" ){
 						this.tool_clear.render();
 					}
+					
+					
 				},
 				
 				//设置画笔的颜色
