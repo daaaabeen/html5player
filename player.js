@@ -432,6 +432,8 @@
 		//资源 用于加载图片等资源
 		rs : {
 			_img : [],
+			_file_or_ppt : [],
+			//get img(){return this._img},
 			init:function(url){
 				if(this._hasinited)return ;
 				console.log("src=\""+url+"/audio.mp3\"");
@@ -450,15 +452,30 @@
 							var i = 0;
 							var imgobj = null;
 							while( i < len ){
-								//如果是图片资源
-								if( record[i].class == "图片"){
-									imgobj = new Image();
-									imgobj.src = record[i].src;
-									imgobj.id = record[i].id;
-									Kernel.rs._img.push(imgobj);
+								
+								if( record[i].class == "DRFileRecord"){//如果是图片 ppt file 类资源
+									if(record[i].type == "image"){//如果是图片
+										imgobj = new Image();
+										imgobj.src = record[i].relativeSourcePath + "/" + record[i].pageIndex + ".png";
+										imgobj.fileId = record[i].fileId;
+										Kernel.rs._img.push(imgobj);
+									
+									}else{//如果是 ppt 或 文件 type == ppt or file
+										
+										imgobj = new Image();
+										imgobj.src = record[i].relativeSourcePath + "/" + record[i].pageIndex + ".png";
+										imgobj.fileId = record[i].fileId;
+										imgobj.pageIndex = record[i].pageIndex;
+										Kernel.rs._file_or_ppt.push(imgobj);
+										
+									}
+									
 								}
+								
+								i++;
+								
 							}
-						}(data.record);
+						}(data.records);
 						setTimeout(k_rs_preload,0);
 						//图片预加载----------------------------------------
 					}
@@ -580,18 +597,31 @@
 				console.log("-------trail info end---------");
 			},
 			//播放到这个时间点
-			draw:function( t ){
+			draw : function( t ){
 				
+				
+				var win = function(){
+					console.log("render success!");
+					this._index++;
+					console.log(this._index);
+				}.bind(this);
 				var trail_class = null;
 				while( this._index < this._len && this._records[this._index].timestamp < t ){
 					//class: DRContextRecord / DRStrokeRecord
 					
 					trail_class = this._records[this._index].class;
-					if( trail_class == "DRContextRecord" || trail_class == "DRStrokeRecord" ){
-						this.painter.read_and_parse(this._records[this._index]);
+					if( trail_class == "DRContextRecord" || trail_class == "DRStrokeRecord" || trail_class == "DRClearCanvasRecord" ){
+						
+						console.log("class:" + trail_class);
+						this.painter.read_and_parse( this._records[this._index] , win  );
+						
+					}else if(trail_class == "DRFileRecord" ){//插入图片，ppt，文件等
+						
+						
+					}else{
+						this._index++;
 					}
-					console.log("class:" + trail_class);
-					this._index++;
+					
 				}
 			},
 			
@@ -603,7 +633,8 @@
 					this._painter_mode = void 0;
 				},
 				
-				read_and_parse:function( obj ){
+				
+				read_and_parse:function( obj , win ){
 					if( obj.class == "DRContextRecord" ){
 						var type = obj.type;
 						if(type == 1){//设置画笔颜色
@@ -629,6 +660,7 @@
 						this.tool_clear.render();
 					}
 					
+					win();
 					
 				},
 				
@@ -735,6 +767,7 @@
 				//橡皮工具
 				tool_erase:{
 					
+					//获取画笔
 					get_context:function(stroke_id){
 						this._ctx_arr || ( this._ctx_arr = [] );
 						
