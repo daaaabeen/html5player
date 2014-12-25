@@ -346,7 +346,7 @@
 						console.log("clear:k_c_p_run");
 						Events.trigger("Kernel:Control:stop");
 						
-					}else if( !Kernel.audio.can_play() ){//不能正常播放需要缓冲
+					}else if( !Kernel.audio.can_play() || !Kernel.board.can_play() ){//不能正常播放需要缓冲
 						clearInterval( k_c_p_run );
 						console.log("clear:k_c_p_run");
 						Events.trigger("Kernel:Control:wait");
@@ -390,8 +390,8 @@
 				Kernel.audio.pause();
 				this.change_status(this._code.wait);
 				var k_c_w_run = setInterval(function(){
-					if(this._last_status == this._code.play){
-						if( Kernel.audio.can_play() ){//能正常播放需要缓冲
+					if( this._last_status == this._code.play ){
+						if( Kernel.audio.can_play() && Kernel.board.can_play() ){//能正常播放需要缓冲
 							clearInterval(k_c_w_run);
 							console.log("clear:k_c_w_run");
 							Events.trigger("Kernel:Control:play");
@@ -471,10 +471,9 @@
 									}
 									
 								}
-								
 								i++;
-								
 							}
+							
 						}(data.records);
 						setTimeout(k_rs_preload,0);
 						//图片预加载----------------------------------------
@@ -578,6 +577,15 @@
 			
 			init:function(canvas_obj){
 				this._p = canvas_obj;
+				
+			},
+			
+			//判断能否播放
+			can_play : function(){
+				if( false ){//检测阻止播放的条件是否已经不存在
+					return false;
+				} 
+				return true;
 			},
 			
 			//获取画板
@@ -605,8 +613,15 @@
 					this._index++;
 					console.log(this._index);
 				}.bind(this);
+				
+				var fail = function(){
+					console.log("render fail!");
+					console.log(this._index);	
+				}.bind(this);
+				
 				var trail_class = null;
-				while( this._index < this._len && this._records[this._index].timestamp < t ){
+				
+				while( this.can_play() && this._index < this._len && this._records[this._index].timestamp < t  ){
 					//class: DRContextRecord / DRStrokeRecord
 					
 					trail_class = this._records[this._index].class;
@@ -617,6 +632,8 @@
 						
 					}else if(trail_class == "DRFileRecord" ){//插入图片，ppt，文件等
 						
+						console.log("class:" + trail_class);
+						this.painter.read_and_parse( this._records[this._index] , win , fail  );
 						
 					}else{
 						this._index++;
@@ -634,19 +651,26 @@
 				},
 				
 				
-				read_and_parse:function( obj , win ){
+				read_and_parse:function( obj , win ,fail ){
 					if( obj.class == "DRContextRecord" ){
 						var type = obj.type;
 						if(type == 1){//设置画笔颜色
 							
 							this.set_painter_color(obj.data);
-							
-						}else if(type == 2){//设置画笔粗细
+							( typeof win === "function" ) && win();
+						}else if( type == 2 ){//设置画笔粗细
 							this.set_painter_line_width(obj.data);
-							
-						}else if(type == 3){//设置混合模式（正常或者擦除）
+							( typeof win === "function" ) && win();
+						
+						}else if( type == 3 ){//设置混合模式（正常或者擦除）
 							this.set_painter_mode(obj.data);
+							( typeof win === "function" ) && win();
+						
+						}else if( type == 4 ){//插入一个新的页面 
+							this.tool_page.insert_page(obj.data);
+						
 						}
+						
 					}else if( obj.class == "DRStrokeRecord" ){
 						if( this.painter_mode() == "erase" ){
 							this.tool_erase.render(obj);
@@ -656,22 +680,25 @@
 							console.log("未定义的工具！");
 							console.log(obj);
 						}
+						win();
 					}else if( obj.class == "DRClearCanvasRecord" ){
 						this.tool_clear.render();
+						win();
 					}
 					
-					win();
+					
 					
 				},
 				
 				//设置画笔的颜色
-				set_painter_color:function(data){
+				set_painter_color:function( data , win ){
 					var decimal = Math.floor( Number(data.r) * 255 ) * 65536 + Math.floor(Number(data.g) * 255 ) * 256 + Math.floor(Number(data.b) * 255 );
 					if(isNaN(decimal))decimal = 0;
 					var num = decimal.toString(16);
 					while (num.length < 6) num = "0" + num;
 					this._painter_color = "#" + num;
 					console.log("设置画笔颜色："+this._painter_color);
+					win && win();
 				},
 				//获取画笔颜色
 				painter_color : function(){
@@ -700,6 +727,40 @@
 				painter_mode:function(){
 					return this._painter_mode ? this._painter_mode : "pencil";
 				},
+				
+				//页码管理工具
+				tool_page : {
+					_pages : [],
+					
+					get current_page(){
+						( this._current_page == undefined ) || this._current_page = 0; 
+						return this._current_page;
+					},
+					set current_page(value){
+						this._current_page = value;
+					},
+					
+					//----------写到了这--------------------
+					insert_page : function(data , win, fail ){
+						
+						page = data.data;
+						var contxt = Kernel.board.canvas().getContext("2d");
+						var w = Kernel.board.canvas().width;
+						var h = Kernel.board.canvas().height;
+						var imgData = contxt.getImageData( 0, 0, w, h );
+						this._pages[ this.current_page ] = imgData;
+						contxt.clearRect( 0, 0, w , h );
+						
+						for(var i = this._pages.length-1 ; i >= page-1; i--  ){
+							this._pages[i+1] = this._pages[i]; 
+						}
+						this._pages[ page-1 ] = contxt.getImageData( 0, 0, w, h );
+						this.current_page = page-1;
+						(typeof win === "function") && win();
+						
+					}
+				},
+				
 				
 				//画笔工具
 				tool_pencil:{
@@ -827,9 +888,11 @@
 					render:function(){
 						var canvas = Kernel.board.canvas();
 						var ctx = canvas.getContext("2d");
-						ctx.clearRect(0,0,$(canvas).width(),$(canvas).height());
+						ctx.clearRect( 0, 0, canvas.width, canvas.height );
 					}
 				},
+				//tool_clear
+				
 				
 			}
 			//painter
