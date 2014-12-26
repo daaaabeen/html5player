@@ -431,10 +431,17 @@
 		
 		//资源 用于加载图片等资源
 		rs : {
-			_img : [],
-			_file_or_ppt : [],
-			//get img(){return this._img},
+			
+			get img(){
+				this._img || ( this._img=[] );
+				return this._img; 
+			},
+			get file_or_ppt(){ 
+				this._file_or_ppt || ( this._file_or_ppt = [] ); 
+				return this._file_or_ppt; 
+			},
 			init:function(url){
+				
 				if(this._hasinited)return ;
 				console.log("src=\""+url+"/audio.mp3\"");
 				Kernel.audio.set_src( url+"/audio.mp3" );
@@ -454,19 +461,21 @@
 							while( i < len ){
 								
 								if( record[i].class == "DRFileRecord"){//如果是图片 ppt file 类资源
-									if(record[i].type == "image"){//如果是图片
+									if(record[i].fileType == 1){//如果是图片
 										imgobj = new Image();
-										imgobj.src = record[i].relativeSourcePath + "/" + record[i].pageIndex + ".png";
+										//imgobj.src = record[i].relativeSourcePath + "/" + record[i].pageIndex + ".png";
+										imgobj.src = url +"/"+ record[i].relativeSourcePath;
 										imgobj.fileId = record[i].fileId;
-										Kernel.rs._img.push(imgobj);
+										Kernel.rs.img.push(imgobj);
 									
 									}else{//如果是 ppt 或 文件 type == ppt or file
 										
 										imgobj = new Image();
-										imgobj.src = record[i].relativeSourcePath + "/" + record[i].pageIndex + ".png";
+										//imgobj.src = record[i].relativeSourcePath + "/" + record[i].pageIndex + ".png";
+										imgobj.src = url +"/"+ record[i].relativeSourcePath;
 										imgobj.fileId = record[i].fileId;
 										imgobj.pageIndex = record[i].pageIndex;
-										Kernel.rs._file_or_ppt.push(imgobj);
+										Kernel.rs.file_or_ppt.push(imgobj);
 										
 									}
 									
@@ -582,8 +591,15 @@
 			
 			//判断能否播放
 			can_play : function(){
-				if( false ){//检测阻止播放的条件是否已经不存在
-					return false;
+				
+				if( this._block_elem ){//检测阻止播放的条件是否已经不存在
+					if( this._block_elem.complete ){
+						this._block_elem = void 0;
+						return true;
+					}else{
+						return false;
+					}
+					
 				} 
 				return true;
 			},
@@ -667,8 +683,10 @@
 							( typeof win === "function" ) && win();
 						
 						}else if( type == 4 ){//插入一个新的页面 
-							this.tool_page.insert_page(obj.data);
-						
+							this.tool_page.insert_page( obj , win );
+							
+						}else if( type == 5 ){//幻灯片翻到下一页
+							this.tool_file.turn_page( obj, win, fail );
 						}
 						
 					}else if( obj.class == "DRStrokeRecord" ){
@@ -684,6 +702,8 @@
 					}else if( obj.class == "DRClearCanvasRecord" ){
 						this.tool_clear.render();
 						win();
+					}else if( obj.class == "DRFileRecord" ){
+						this.tool_file.render(obj,win,fail);
 					}
 					
 					
@@ -698,7 +718,7 @@
 					while (num.length < 6) num = "0" + num;
 					this._painter_color = "#" + num;
 					console.log("设置画笔颜色："+this._painter_color);
-					win && win();
+					( typeof win === "function" ) && win();
 				},
 				//获取画笔颜色
 				painter_color : function(){
@@ -730,17 +750,19 @@
 				
 				//页码管理工具
 				tool_page : {
+					
+					//存放page的列表
 					_pages : [],
 					
 					get current_page(){
-						( this._current_page == undefined ) || this._current_page = 0; 
+						(this._current_page == undefined)  || (this._current_page = 0 ); 
 						return this._current_page;
 					},
 					set current_page(value){
 						this._current_page = value;
 					},
 					
-					//----------写到了这--------------------
+					//插入一个页面
 					insert_page : function(data , win, fail ){
 						
 						page = data.data;
@@ -824,6 +846,55 @@
 					
 				},
 				
+				//文件工具
+				tool_file : {
+					
+					get imgs(){
+						return Kernel.rs.img;
+					},
+					get files(){
+						return Kernel.file_or_ppt;
+					},
+					
+					//ppt翻页
+					turn_page : function( obj, win, fail ){
+						
+					},
+					
+					//绘制图片
+					render : function( obj, win, fail ){
+						
+						if( obj.fileType == 1 ){//1是图片
+							var fileId = obj.fileId;
+							var imgs = this.imgs;
+							var len = imgs.length;
+							var img = null;
+							for(var i = 0; i < len; i++){
+								if(imgs[i].fileId == fileId){
+									img = imgs[i];
+									break;
+								}
+							}
+							if( img.complete ){
+								
+								var ctx=Kernel.board.canvas().getContext("2d");
+								ctx.drawImage( img, obj.x, obj.y, obj.width, obj.height );
+								(typeof win == "function") && win();
+							}
+							else{
+								this._block_elem = img;
+								(typeof fail == "function") && fail();
+							}
+							
+						}else{//是文件或者ppt
+							win();
+						}
+						
+						
+					},
+				},
+				//toll_file
+				
 				
 				//橡皮工具
 				tool_erase:{
@@ -892,6 +963,8 @@
 					}
 				},
 				//tool_clear
+				
+				
 				
 				
 			}
