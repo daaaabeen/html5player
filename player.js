@@ -1203,6 +1203,20 @@ player.view.extend({
 player.init("myCanvas","audio");
 
 
+function android_play(){
+	if(player.view.status ()!= "play"){
+		$("#play").click();
+	}
+	
+}
+
+function android_pause(){
+	if(player.view.status ()!= "pause"){
+		$("#play").click();
+	}
+}
+
+
 /*
 console.log("----test-----");
 var fun = function(a){console.log(a+6);};
