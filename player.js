@@ -1216,6 +1216,9 @@ function android_pause(){
 	}
 }
 
+function android_status(){
+	return player.view.status();
+}
 
 /*
 console.log("----test-----");
