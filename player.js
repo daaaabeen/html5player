@@ -780,7 +780,26 @@
 						this.current_page = page-1;
 						(typeof win === "function") && win();
 						
+					},
+					
+					//下一页
+					next_page : function(obj,win,fail){
+						
+						var contxt = Kernel.board.canvas().getContext("2d");
+						var w = Kernel.board.canvas().width;
+						var h = Kernel.board.canvas().height;
+						var imgData = contxt.getImageData( 0, 0, w, h );
+						this._pages[ this.current_page ] = imgData;
+						contxt.clearRect( 0, 0, w , h );
+						this.current_page++;
+						imgData = null;
+						this._pages[this.current_page] || ( imgData = this._pages[this.current_page] )  ;
+						
+						if(imgData) contxt.drawImage( imgData, 0, 0, w, h );
+						(typeof win === "function") && win();
+					
 					}
+				
 				},
 				
 				
@@ -858,7 +877,7 @@
 					
 					//ppt翻页
 					turn_page : function( obj, win, fail ){
-						
+						Kernel.board.tool_page.next_page(obj,win,fail);
 					},
 					
 					//绘制图片
@@ -887,7 +906,27 @@
 							}
 							
 						}else{//是文件或者ppt
-							win();
+							var fileId = obj.fileId;
+							var file_or_ppt = this.files;
+							var len = file_or_ppt.length;
+							var img = null;
+							for(var i = 0; i < len; i++){
+								if(file_or_ppt[i].fileId == fileId){
+									img = imgs[i];
+									break;
+								}
+							}
+							if( img.complete ){
+								var canvas = Kernel.board.canvas();
+								var ctx= canvas.getContext("2d");
+								ctx.clearRect( 0, 0, canvas.width, canvas.height );
+								ctx.drawImage( img, obj.x, obj.y, obj.width, obj.height );
+								(typeof win == "function") && win();
+							}
+							else{
+								this._block_elem = img;
+								(typeof fail == "function") && fail();
+							}
 						}
 						
 						
@@ -1162,7 +1201,6 @@ player.view.extend({
 });
 
 player.init("myCanvas","audio");
-
 
 
 /*
