@@ -872,12 +872,12 @@
 						return Kernel.rs.img;
 					},
 					get files(){
-						return Kernel.file_or_ppt;
+						return Kernel.rs.file_or_ppt;
 					},
 					
 					//ppt翻页
 					turn_page : function( obj, win, fail ){
-						Kernel.board.tool_page.next_page(obj,win,fail);
+						Kernel.board.painter.tool_page.next_page(obj,win,fail);
 					},
 					
 					//绘制图片
@@ -912,7 +912,7 @@
 							var img = null;
 							for(var i = 0; i < len; i++){
 								if(file_or_ppt[i].fileId == fileId){
-									img = imgs[i];
+									img = file_or_ppt[i];
 									break;
 								}
 							}
