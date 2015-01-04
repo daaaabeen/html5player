@@ -1,9 +1,9 @@
 <?php
-$url = $_REQUEST["trailfile_id"];
+header("Content-type: image/png");
+$url = urldecode($_GET["url"]);
 $fp = fopen ( $url, "r" );
 $data = "";
 while ( ! feof ( $fp ) ) {
-	$data .= fgets ( $fp );
+	echo fgets ( $fp );
 }
 fclose ( $fp );
-echo $data;

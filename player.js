@@ -208,7 +208,7 @@
 		
 		play:function(url){
 			
-			if( Kernel.status() == "nostatus"){
+			if( Kernel.status() == "nostatus" || Kernel.status() == "stop"){
 				this.start(url);
 			}else{
 				Events.trigger("Kernel:Control:play");
@@ -324,8 +324,11 @@
 			//开始播放
 			start:function(url,success){
 				this.change_status(this._code.init);
+				Kernel.board.reset();
+				Kernel.audio.reset();
+				Kernel.rs.reset();
 				Kernel.rs.init(url);
-				if( success !== undefined ) success();
+				typeof success == "function" && success();
 			
 			},
 			
@@ -447,7 +450,7 @@
 				Kernel.audio.set_src( url+"/audio.mp3" );
 				
 				$.ajax({
-					url:url+"/trail.json",
+					url:url+"/event.json",
 					dataType:"json",
 					async : false,
 					success:function(data){
@@ -505,6 +508,7 @@
 			reset:function(){
 				this._hasinited = void 0;
 				this._img = [];
+				this._file_or_ppt = [];
 			}
 			
 		},
@@ -516,6 +520,9 @@
 			init:function(audio_obj){
 				//_p是audio播放器的对象
 				this._p = audio_obj;
+			},
+			reset:function(){
+				
 			},
 			
 			//设置播放资源的源地址
@@ -584,10 +591,25 @@
 		//白板
 		board:{
 			
+			reset:function(){
+				
+				console.group("board reset!!");
+				this.painter.tool_clear.render();
+				console.info("清空画布！");
+				this.painter.reset();
+				console.info("painter reset!!");
+				this._block_elem && (this._block_elem = void 0 );
+				console.info("block_elem reset!!");
+				console.groupEnd("board reset!!");
+				
+			},
+			
 			init:function(canvas_obj){
 				this._p = canvas_obj;
 				
 			},
+			
+			
 			
 			//判断能否播放
 			can_play : function(){
@@ -664,6 +686,7 @@
 					this._painter_color = void 0;
 					this._painter_line_width = void 0;
 					this._painter_mode = void 0;
+					this.tool_page.reset();
 				},
 				
 				
@@ -750,7 +773,9 @@
 				
 				//页码管理工具
 				tool_page : {
-					
+					reset : function(){
+						this._pages = [];
+					},
 					//存放page的列表
 					_pages : [],
 					
@@ -1241,5 +1266,32 @@ console.log("-----");
 player.events.trigger("aaa",10);
 console.log("----test--end---");
 */
+
+var t=0;
+var imgs = [];
+function test(){
+	t++;
+	
+	console.group("test"+t);
+	var canvas = document.getElementById("myCanvas"); 
+	var ctx = canvas.getContext("2d");
+	var i = 0;
+	console.time("ss");
+	while( i< 40 ){
+		imgs[i] = ctx.getImageData(0,0,canvas.width,canvas.height);
+		i++;
+	}
+	console.log(imgs.length);
+	console.timeEnd("ss");
+	console.groupEnd("test"+t);
+}
+var goo = null;
+function doing(){
+	goo = setInterval(test,500);
+	
+}
+function undo(){
+	clearInterval(goo);
+}
 
 
