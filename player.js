@@ -362,7 +362,7 @@
 					}else{//可以正常播放
 						
 						var c_t = Kernel.audio.current_time();//当前播放到的事件
-						var now_t = Math.floor(c_t);
+						var now_t = Math.ceil(c_t);
 						if(this._last_time !== undefined){
 							if( this._last_time != now_t ){
 								this._last_time = now_t;
@@ -553,6 +553,8 @@
 			},
 			
 			total_time : function(){
+				console.log("声音时长："+this._p.duration);
+				//alert(this._p.duration);
 				return this._p.duration;
 			},
 			
@@ -926,7 +928,7 @@
 								(typeof win == "function") && win();
 							}
 							else{
-								this._block_elem = img;
+								Kernel.board._block_elem = img;
 								(typeof fail == "function") && fail();
 							}
 							
@@ -949,7 +951,7 @@
 								(typeof win == "function") && win();
 							}
 							else{
-								this._block_elem = img;
+								Kernel.board._block_elem = img;
 								(typeof fail == "function") && fail();
 							}
 						}
@@ -1148,6 +1150,7 @@ player.view.extend({
 	//在播放之前，当正在加载文件的时候
 	on_start:function(){
 		console.log("on_start");
+		$("#current-time").css("width","0");
 		$("#msg").html("正在加载！");
 	},
 	
@@ -1184,7 +1187,8 @@ player.view.extend({
 	//当资源加载完毕
 	on_rs_inited:function(){
 		console.log("on_rs_inited");
-		var len = Math.floor( this.total_time() );
+		
+		var len = Math.ceil( this.total_time() );
 		var h = Math.floor( len / 3600 ) ; //视频的时间 -小时
 		var m = Math.floor( (len % 3600) / 60 );//视频的时间 -分钟
 		var s = (len % 60);//视频的时间 -秒数
@@ -1199,7 +1203,7 @@ player.view.extend({
 		console.log("new_time:"+now_time);
 		var h = Math.floor( now_time / 3600 ) ; //视频的时间 -小时
 		var m = Math.floor( ( now_time % 3600  ) / 60 );//视频的时间 -分钟
-		var s = Math.floor( now_time  % 60 );//视频的时间 -秒数
+		var s = now_time % 60 ;//视频的时间 -秒数
 		$("#s").html(s);							
 		$("#m").html(m);
 		$("#h").html(h);
