@@ -967,6 +967,8 @@
 					
 					//获取画笔
 					get_context:function(stroke_id){
+						
+						
 						this._ctx_arr || ( this._ctx_arr = [] );
 						
 						var x;
@@ -978,7 +980,7 @@
 						
 						var contxt = Kernel.board.canvas().getContext("2d");
 						contxt.lineWidth = Kernel.board.painter.painter_line_width();
-						//contxt.strokeStyle = "#FFFFFF";//颜色
+						contxt.strokeStyle = "#FFFFFF";//颜色
 						contxt.strokeId = stroke_id;
 						this._ctx_arr.push(contxt);
 						return contxt;
@@ -1007,6 +1009,21 @@
 					
 					render:function(data){
 						
+						
+						var contxt = this.get_context(data.strokeId);
+						if( data.phase == 0 ){
+							contxt.beginPath(); 
+							contxt.moveTo( data.x, data.y ); // 移动到坐标 50 50 
+						}else if( data.phase == 1 ){
+							contxt.lineTo( data.x, data.y ); // 划出轨迹到 150 150
+							contxt.stroke();
+						}else{
+							contxt.lineTo( data.x, data.y ); // 划出轨迹到 150 150
+							contxt.stroke();
+							this.del_context(data.strokeId);
+						}
+						
+						/*
 						var contxt = this.get_context(data.strokeId);
 						var w = Kernel.board.painter.painter_line_width();
 						var x = data.x - w/2;
@@ -1015,7 +1032,7 @@
 						if( data.phase == 2 ){							
 							this.del_context(data.strokeId);
 						}
-						
+						*/
 						
 					}
 				},
