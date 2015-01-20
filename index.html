@@ -8,8 +8,12 @@
 <style>
 #title{height:25px;width:1016px;padding:5px;line-height:25px;background:#212227;color:#FFFFFF;}
 #myCanvas{border:1px solid #555;cursor:pointer; }
-#timeline{height:3px;width:1024px;border:1px solid #888;background-color:gray;border-radius:3px;overflow:hideen;}
+#timeline{height:3px;width:1024px;border:1px solid #888;background-color:gray;border-radius:3px;overflow:hideen;cursor:pointer; position:relative;}
+#timeline:hover{height:5px;z-index:100;}
 #current-time{height:3px;width:0;background-color:red;border-radius: 3px;}
+#show-time{position:absolute;display:none; width:60px;height:30px;top:-40px;border:0px #000 solid;background:#ccc;z-index:10001; 
+		text-align:center; border-radius: 15px; line-height:30px;}
+#timeline:hover #current-time{height:5px; z-index:100;}
 #data-store{width:0;height:0;overflow:hidden;}
 #menu{height:80px;width:1024px;border:1px solid #555;background:#B7B6B6;}
 .menu-left{height:80px;width:500px;float:left;}
@@ -33,7 +37,10 @@
 <body>
 <div id="title">html5电子白板播放器V2.0</div>
 <canvas id="myCanvas" width="1024" height="693" >浏览器不支持</canvas>
-<div id="timeline"><div id="current-time"></div></div>
+<div id="timeline">
+	<div id="current-time"></div>
+	<div id="show-time">111111</div>
+</div>
 <div id="data-store">
 	<div id="data-store-img"></div>
 	

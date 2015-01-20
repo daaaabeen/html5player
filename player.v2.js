@@ -165,6 +165,7 @@
 			Events.on("Kernel:Control:timechange",View.on_time_change,View);
 			Events.on("Kernel:Control:mute_change",View.on_mute_change,View);
 			Events.on("Kernel:Control:volume_change",View.on_volume_change,View);
+			Events.on("Kernel:Control:seek_end",View.on_seek_end,View);
 			
 		},
 		
@@ -178,6 +179,7 @@
 		on_time_change:function(){},
 		on_mute_change:function(){},
 		on_volume_change:function(){},
+		on_seek_end:function(){},
 		
 		//当前的状态
 		status : function(){
@@ -215,6 +217,9 @@
 			}
 			
 		},
+		seek_to:function(pos){
+			Events.trigger("Kernel:Control:seek_to",pos);
+		},
 		
 		pause:function(){
 			Events.trigger("Kernel:Control:pause");
@@ -249,7 +254,7 @@
 			Events.on("Kernel:Control:pause", Kernel.control.pause, Kernel.control);
 			Events.on("Kernel:Control:mute", Kernel.control.mute, Kernel.control);
 			Events.on("Kernel:Control:set_volume", Kernel.control.set_volume, Kernel.control);
-			
+			Events.on("Kernel:Control:seek_to", Kernel.control.seek_to, Kernel.control);
 		},
 		
 		status:function(){
@@ -365,6 +370,10 @@
 						var now_t = Math.ceil(c_t);
 						if(this._last_time !== undefined){
 							if( this._last_time != now_t ){
+								if( now_t<this._last_time ){
+									//清空画布
+									Kernel.board.reset();
+								}
 								this._last_time = now_t;
 								Events.trigger("Kernel:Control:timechange",now_t);
 							}
@@ -424,8 +433,9 @@
 			},
 			
 			//设置播放进度
-			set_process:function(val, success){
-				
+			seek_to:function(val, success){
+				Kernel.audio.set_current_time(val);
+				Events.trigger("Kernel:Control:seek_end",val);
 			}
 				
 		},
@@ -522,7 +532,7 @@
 				this._p = audio_obj;
 			},
 			reset:function(){
-				
+				this._p.currentTime = 0;
 			},
 			
 			//设置播放资源的源地址
@@ -596,6 +606,7 @@
 			reset:function(){
 				
 				console.group("board reset!!");
+				this._index = 0;
 				this.painter.tool_clear.render();
 				console.info("清空画布！");
 				this.painter.reset();
@@ -967,6 +978,8 @@
 					
 					//获取画笔
 					get_context:function(stroke_id){
+						
+						
 						this._ctx_arr || ( this._ctx_arr = [] );
 						
 						var x;
@@ -978,7 +991,7 @@
 						
 						var contxt = Kernel.board.canvas().getContext("2d");
 						contxt.lineWidth = Kernel.board.painter.painter_line_width();
-						//contxt.strokeStyle = "#FFFFFF";//颜色
+						contxt.strokeStyle = "#FFFFFF";//颜色
 						contxt.strokeId = stroke_id;
 						this._ctx_arr.push(contxt);
 						return contxt;
@@ -1007,6 +1020,21 @@
 					
 					render:function(data){
 						
+						
+						var contxt = this.get_context(data.strokeId);
+						if( data.phase == 0 ){
+							contxt.beginPath(); 
+							contxt.moveTo( data.x, data.y ); // 移动到坐标 50 50 
+						}else if( data.phase == 1 ){
+							contxt.lineTo( data.x, data.y ); // 划出轨迹到 150 150
+							contxt.stroke();
+						}else{
+							contxt.lineTo( data.x, data.y ); // 划出轨迹到 150 150
+							contxt.stroke();
+							this.del_context(data.strokeId);
+						}
+						
+						/*
 						var contxt = this.get_context(data.strokeId);
 						var w = Kernel.board.painter.painter_line_width();
 						var x = data.x - w/2;
@@ -1015,7 +1043,7 @@
 						if( data.phase == 2 ){							
 							this.del_context(data.strokeId);
 						}
-						
+						*/
 						
 					}
 				},
@@ -1119,10 +1147,64 @@ player.view.extend({
 		
 		}.bind(this));
 		
-		$(document).mouseup(function(){
-			this._changeVoice = void 0;
-			//alert("22");
+		$("#timeline").mousedown(function(e){
+			this._changeProcess = true;
+			console.log("#timeline mousedown");
+			$("#show-time").show();
+			var w =( ( e.pageX ) - ( $("#timeline").position().left ) ) / ( $("#timeline").width() );
+			console.log(w);
+			if( w < 0 ) w = 0;
+			if(w>1) w = 1;
+			$("#current-time").width(w*100+"%");
+			var c_t = Math.ceil( w * this.total_time() );
+			console.log("moucemove time:"+c_t);
+			
+			var l = $("#timeline").position().left;
+			var r = $("#timeline").position().left + $("#timeline").width() - $("#show-time").width();
+			var s_t_p = e.pageX < l ? l : e.pageX > r ? r : e.pageX - ( $("#show-time").width() / 2 ) ;
+			$("#show-time").stop().css("left",s_t_p);
+			var h = Math.floor( c_t / 3600 ) ; //视频的时间 -小时
+			var m = Math.floor( ( c_t % 3600  ) / 60 );//视频的时间 -分钟
+			var s = c_t % 60 ;//视频的时间 -秒数
+			$("#show-time").html(h+":"+m+":"+s);
+			
+			
+			
+			
+			//alert($("#voice-bar").position().left);
+			
+			/*
+			var width = ( e.pageX ) - ( $("#voice-bar").position().left ) ;
+			if( width< 0 ){
+				width = 0; 
+			}else if( width > $("#voice-bar").width() ){
+				width = $("#voice-bar").width();
+			}
+			//alert(width);
+			$("#current-voice").width( width );
+			this.set_volume(width / $("#voice-bar").width());
+			//alert(e.pageX + ", " + e.pageY);
+			*/
 		}.bind(this));
+		
+		
+		
+		
+		$(document).mouseup(function(e){
+			e || ( e = window.Event );
+			this._changeVoice && (this._changeVoice = void 0);
+			//alert("22");
+			if(this._changeProcess){
+				$("#show-time").hide();
+				var w = ( ( e.pageX ) - ( $("#timeline").position().left ) ) / $("#timeline").width();
+				$("#current-time").width(w*100+"%");
+				var c_t = Math.ceil( w * this.total_time() );
+				console.log("mouseup seek_to:"+c_t);
+				this.seek_to(c_t);
+				this._changeProcess = void 0;
+			}
+		}.bind(this));
+		
 		$(document).mousemove(function(e){
 			//alert(p.changeVoice);
 			if(this._changeVoice === true){
@@ -1139,6 +1221,27 @@ player.view.extend({
 				this.set_volume( width / $("#voice-bar").width() ) ;
 				
 			}
+			
+			if(this._changeProcess === true ){
+				var w =( ( e.pageX ) - ( $("#timeline").position().left ) ) / ( $("#timeline").width() );
+				console.log(w);
+				if( w < 0 ) w = 0;
+				if(w>1) w = 1;
+				$("#current-time").stop().width(w*100+"%");
+				var c_t = Math.ceil( w * this.total_time() );
+				console.log("moucemove time:"+c_t);
+				
+				var l = $("#timeline").position().left;
+				var r = $("#timeline").position().left + $("#timeline").width() - $("#show-time").width();
+				var s_t_p = e.pageX < l ? l : e.pageX > r ? r : e.pageX - ( $("#show-time").width() / 2 ) ;
+				$("#show-time").css("left",s_t_p);
+				var h = Math.floor( c_t / 3600 ) ; //视频的时间 -小时
+				var m = Math.floor( ( c_t % 3600  ) / 60 );//视频的时间 -分钟
+				var s = c_t % 60 ;//视频的时间 -秒数
+				$("#show-time").html(h+":"+m+":"+s);		
+				
+			}
+			
 			//$("span").text(e.pageX + ", " + e.pageY);
 			
 		}.bind(this));
@@ -1199,6 +1302,7 @@ player.view.extend({
 	
 	//当时间改变的时候
 	on_time_change:function(now_time){
+		if(this._changeProcess)return ;
 		console.log("on_time_change");
 		console.log("new_time:"+now_time);
 		var h = Math.floor( now_time / 3600 ) ; //视频的时间 -小时
