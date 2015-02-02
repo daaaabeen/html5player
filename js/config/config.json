@@ -1,0 +1,9 @@
+{
+	"canvas":{
+		"viewId":"myCanvas",
+		"backId":"myCanvas"
+	},
+	"audio":{
+		"audioId":"audio"
+	}
+}
