@@ -1,102 +1,10 @@
 define(function (require, exports, module) {
-
-	var Events = require("pkg!Event");
-	var Kernel = require("pkg!Kernel");
+	//var Events = require("pkg!Event");
+	var View = require("./View");
 	var $ = require("jquery");
-	var View = {
-		init:function(){
-			this._total_time && ( this._total_time = void 0 );
-			this.initialize();
-			//Events.on("Kernel:RS:inited",this.play);
-			Events.on("Kernel:Control:start", View.on_start, View);
-			Events.on("Kernel:Control:play", View.on_play, View);
-			Events.on("Kernel:Control:stop", View.on_stop, View);
-			Events.on("Kernel:Control:wait", View.on_wait, View);
-			Events.on("Kernel:Control:pause", View.on_pause, View);
-			Events.on("Kernel:rs:inited",View.on_rs_inited,View);
-			Events.on("Kernel:Control:timechange",View.on_time_change,View);
-			Events.on("Kernel:Control:mute_change",View.on_mute_change,View);
-			Events.on("Kernel:Control:volume_change",View.on_volume_change,View);
-			Events.on("Kernel:Control:seek_end",View.on_seek_end,View);
-			
-		},
-		
-		initialize:function(){},
-		on_start:function(){},
-		on_play:function(){},
-		on_stop:function(){},
-		on_wait:function(){},
-		on_pause:function(){},
-		on_rs_inited:function(){},
-		on_time_change:function(){},
-		on_mute_change:function(){},
-		on_volume_change:function(){},
-		on_seek_end:function(){},
-		
-		//当前的状态
-		status : function(){
-			return Kernel.status();
-		},
-		
-		//当前时间
-		current_time : function(){
-			return  Kernel.current_time();	
-		},
-		
-		//时长
-		total_time : function(){
-			this._total_time || ( this._total_time = Kernel.total_time() );
-			return this._total_time;
-		},
-		
-		start:function(url){
-			var fun = function(){
-				this.play();
-			}.bind(this);
-			Events.trigger("Kernel:Control:start",url,fun);
-		},
-		
-		play:function(url){	
-			if( Kernel.status() == "nostatus" || Kernel.status() == "stop"){
-				this.start(url);
-			}else{
-				Events.trigger("Kernel:Control:play");
-			}
-		},
-		seek_to:function(pos){
-			Events.trigger("Kernel:Control:seek_to",pos);
-		},
-		
-		pause:function(){
-			Events.trigger("Kernel:Control:pause");
-		},
-		
-		mute : function(val){
-			Events.trigger("Kernel:Control:mute",val);
-			//Kernel.mute(val);
-		},
-		
-		set_volume : function(val){
-			Events.trigger("Kernel:Control:set_volume",val);
-		},
-		
-	};
+    
 	
-	var Extend =  function ( source ) {
-		var target = this;
-		for (var p in source) {
-			if (source.hasOwnProperty(p)) {
-				target[p] = source[p];
-		    }
-		}	    
-		return target;
-	};
-	
-	View.extend = Extend;
-	
-	
-	//////////////////////////////
-	return View.extend({
+	var v =  View.extend({
 		initialize:function(){
 			
 			$("#play").click(function(){
@@ -110,7 +18,7 @@ define(function (require, exports, module) {
 				}
 				
 			}.bind(this));
-			
+			/*
 			$("#mute").click(function(){
 				var o = $("#mute");
 				if( o.attr("data") == "on" ){
@@ -141,12 +49,13 @@ define(function (require, exports, module) {
 				//alert(e.pageX + ", " + e.pageY);
 			
 			}.bind(this));
-			
+			*/
 			$("#timeline").mousedown(function(e){
 				this._changeProcess = true;
 				console.log("#timeline mousedown");
 				$("#show-time").show();
-				var w =( ( e.pageX ) - ( $("#timeline").position().left ) ) / ( $("#timeline").width() );
+				
+				var w =( ( e.pageX ) - ( $("#timeline").offset().left ) ) / ( $("#timeline").width() );
 				console.log(w);
 				if( w < 0 ) w = 0;
 				if(w>1) w = 1;
@@ -154,8 +63,8 @@ define(function (require, exports, module) {
 				var c_t = Math.ceil( w * this.total_time() );
 				console.log("moucemove time:"+c_t);
 				
-				var l = $("#timeline").position().left;
-				var r = $("#timeline").position().left + $("#timeline").width() - $("#show-time").width();
+				var l = $("#timeline").offset().left;
+				var r = $("#timeline").offset().left + $("#timeline").width() - $("#show-time").width();
 				var s_t_p = e.pageX < l ? l : e.pageX > r ? r : e.pageX - ( $("#show-time").width() / 2 ) ;
 				$("#show-time").stop().css("left",s_t_p);
 				var h = Math.floor( c_t / 3600 ) ; //视频的时间 -小时
@@ -172,7 +81,7 @@ define(function (require, exports, module) {
 				//alert("22");
 				if(this._changeProcess){
 					$("#show-time").hide();
-					var w = ( ( e.pageX ) - ( $("#timeline").position().left ) ) / $("#timeline").width();
+					var w = ( ( e.pageX ) - ( $("#timeline").offset().left ) ) / $("#timeline").width();
 					$("#current-time").width(w*100+"%");
 					var c_t = Math.ceil( w * this.total_time() );
 					console.log("mouseup seek_to:"+c_t);
@@ -199,7 +108,7 @@ define(function (require, exports, module) {
 				}
 				
 				if(this._changeProcess === true ){
-					var w =( ( e.pageX ) - ( $("#timeline").position().left ) ) / ( $("#timeline").width() );
+					var w =( ( e.pageX ) - ( $("#timeline").offset().left ) ) / ( $("#timeline").width() );
 					console.log(w);
 					if( w < 0 ) w = 0;
 					if(w>1) w = 1;
@@ -207,8 +116,8 @@ define(function (require, exports, module) {
 					var c_t = Math.ceil( w * this.total_time() );
 					console.log("moucemove time:"+c_t);
 					
-					var l = $("#timeline").position().left;
-					var r = $("#timeline").position().left + $("#timeline").width() - $("#show-time").width();
+					var l = $("#timeline").offset().left;
+					var r = $("#timeline").offset().left + $("#timeline").width() - $("#show-time").width();
 					var s_t_p = e.pageX < l ? l : e.pageX > r ? r : e.pageX - ( $("#show-time").width() / 2 ) ;
 					$("#show-time").css("left",s_t_p);
 					var h = Math.floor( c_t / 3600 ) ; //视频的时间 -小时
@@ -292,10 +201,10 @@ define(function (require, exports, module) {
 			if(cct>100){
 				cct = 100;
 			}
-			
 			$("#current-time").animate({ width : cct+"%" },980);
 		},
 		
+		/*
 		on_mute_change:function(val){
 			console.log("on_mute_change");
 			console.log("new_status:"+val);
@@ -305,8 +214,8 @@ define(function (require, exports, module) {
 			console.log("on_volume_change");
 			console.log("new_volume:"+val);
 		},
-			
+		*/
 	});
 	
-	
+	return v;
 });

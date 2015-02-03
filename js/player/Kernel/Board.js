@@ -18,13 +18,14 @@ define(function (require, exports, module) {
 			
 		},
 		
-		init:function(canvas_obj){
-			this._p = canvas_obj;
+		init:function(){
 			
+			var backId = config.config.canvas.backId;
+			var frontId = config.config.canvas.frontId;
+			this._c_back = document.getElementById(backId);
+			this._c_front = document.getElementById(frontId);
 		},
-		
-		
-		
+	
 		//判断能否播放
 		can_play : function(){
 			
@@ -41,8 +42,10 @@ define(function (require, exports, module) {
 		},
 		
 		//获取画板
-		canvas:function(){
-			return this._p;
+		canvas:function(pos){
+			if( pos && pos == "back")
+				return this._c_back;
+			return this._c_front;
 		},
 		
 		//设置轨迹
@@ -335,7 +338,7 @@ define(function (require, exports, module) {
 						}
 						if( img.complete ){
 							
-							var ctx=Board.canvas().getContext("2d");
+							var ctx=Board.canvas("back").getContext("2d");
 							ctx.drawImage( img, obj.x, obj.y, obj.width, obj.height );
 							(typeof win == "function") && win();
 						}
@@ -356,7 +359,7 @@ define(function (require, exports, module) {
 							}
 						}
 						if( img.complete ){
-							var canvas = Board.canvas();
+							var canvas = Board.canvas("back");
 							var ctx= canvas.getContext("2d");
 							ctx.clearRect( 0, 0, canvas.width, canvas.height );
 							ctx.drawImage( img, obj.x, obj.y, obj.width, obj.height );
@@ -443,6 +446,10 @@ define(function (require, exports, module) {
 					var canvas = Board.canvas();
 					var ctx = canvas.getContext("2d");
 					ctx.clearRect( 0, 0, canvas.width, canvas.height );
+					
+					var canvas_back = Board.canvas("back");
+					var ctx_back = canvas_back.getContext("2d");
+					ctx_back.clearRect( 0, 0, canvas_back.width, canvas_back.height );
 				}
 			},
 			//tool_clear

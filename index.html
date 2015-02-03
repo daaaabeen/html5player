@@ -3,78 +3,44 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport"  content="width=986" >
-
-<title>html5电子白板播放器V1.1</title>
+<title>html5电子白板播放器V3.0</title>
+<link rel="stylesheet" type="text/css" href="./css/reset.css">
+<link rel="stylesheet" type="text/css" href="./css/style.css">
 <style>
-#title{height:25px;width:1016px;padding:5px;line-height:25px;background:#212227;color:#FFFFFF;}
-#myCanvas{border:1px solid #555;cursor:pointer; }
-#timeline{height:3px;width:1024px;border:1px solid #888;background-color:gray;border-radius:3px;overflow:hideen;cursor:pointer; position:relative;}
-#timeline:hover{height:5px;z-index:100;}
-#current-time{height:3px;width:0;background-color:red;border-radius: 3px;}
-#show-time{position:absolute;display:none; width:60px;height:30px;top:-40px;border:0px #000 solid;background:#ccc;z-index:10001; 
-		text-align:center; border-radius: 15px; line-height:30px;}
-#timeline:hover #current-time{height:5px; z-index:100;}
-#data-store{width:0;height:0;overflow:hidden;}
-#menu{height:80px;width:1024px;border:1px solid #555;background:#B7B6B6;}
-.menu-left{height:80px;width:500px;float:left;}
-.menu-right{height:80px;width:200px;float:right;}
-#play{ height:65px;width:65px;float:left;margin:5px;/*background-color:green;*/ cursor:pointer; border-radius: 15px; }
-.play{background: url(img/icon.png) -100px -10px no-repeat;}
-.stop{background: url(img/icon.png) -405px -93px no-repeat;}
 
-.voice-ctrl{height:25px;width:200px;float:left;margin:25px 5px;}
-#mute{cursor:pointer; width:36px;float:left; }
-#voice-bar{height:5px;width:100px;border:1px solid #000;background-color:#000;border-radius:5px;overflow:hideen;float:left; margin:8px 0px;}
-#current-voice{height:5px;width:100px;background-color:red;border-radius:5px;overflow:hideen;float:left;}
-#time-view{ height:25px;width:250px;float:right;margin:5px;text-align:right;}
-#bg-selector{height:25px;width:150px;float:right;margin:5px;text-align:right;}
-.bg-item{height:20px;width:20px;float:right;margin:2px 0 3px 5px;}
-.white{background:white;}
-.black{background:black;}
-.blue{background:blue;}
 </style>
 </head>
 <body>
-<div id="title">html5电子白板播放器V2.0</div>
-<canvas id="myCanvas" width="1024" height="693" >浏览器不支持</canvas>
-<div id="timeline">
-	<div id="current-time"></div>
-	<div id="show-time">111111</div>
-</div>
-<div id="data-store">
-	<div id="data-store-img"></div>
-	
-</div>
-<div id="menu">
-	<div class="menu-left">
-		<div id="play" class="play" title="播放"></div>
-		<div class="voice-ctrl">
-			<div id="mute" data="on">静音</div>
-			<div id="voice-bar" >
-				<div id="current-voice"></div>
-				<div id="current-voice-bar"></div>
+<div class="wrap">
+	<div id="title">html5电子白板播放器V2.0</div>
+	<div class="view">
+		<canvas id="myCanvasBack" width="1024" height="693" >浏览器不支持</canvas>
+		<canvas id="myCanvasFront" width="1024" height="693" >浏览器不支持</canvas>
+	<div>
+	<div id="menu">
+
+		<div class="menu-left">
+			<div id="play" class="play" title="播放"></div>
+		</div>
+		
+		
+		<div class="menu-right">
+			<div id="time-view">
+				<span id="h">0</span>:<span id="m">0</span>:<span id="s">0</span>
+				<span>/</span>
+				<span id="total-time">0:0:0</span>
+				<span id="msg"></span>
 			</div>
 		</div>
-	</div>
-	<div class="menu-right">
-		<div id="time-view">
-			<span id="msg"></span>
-			<span id="h">0</span>:<span id="m">0</span>:<span id="s">0</span>
-			<span>/</span>
-			<span id="total-time">0:0:0</span>
-		</div>
-		<div id="bg-selector">
-			<div class="bg-item white" data="#ffffff"></div>
-			<div class="bg-item black" data="#000000"></div>
-			<div class="bg-item blue" data="#0000ff"></div>
+		<div id="timeline">
+			<div id="current-time"></div>
+			
+			<div id="show-time">111111</div>
 		</div>
 	</div>
-	
-	
+	<audio controls="controls" id="audio" style="display:none;"></audio>
 </div>
-<audio controls="controls" id="audio" style="display:none;">
-	
-</audio>
+
 
 <script data-main="js/main" src="js/lib/requirejs/require.js"></script>
 <!--

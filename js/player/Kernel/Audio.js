@@ -5,9 +5,10 @@ define(function (require, exports, module) {
 	//console.log(config);
 	var Audio = {
 		//初始化
-		init:function(audio_obj){
+		init:function(){
 			//_p是audio播放器的对象
-			this._p = audio_obj;
+			var audioId = config.config.audio.audioId;
+			this._p = document.getElementById(audioId);
 		},
 		reset:function(){
 			this._p.currentTime = 0;

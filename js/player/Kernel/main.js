@@ -1,8 +1,5 @@
 define(function (require, exports, module) {
 	
-	//var player = require("pkg!core");
-	//console.log(palyer);
-	//console.log(palyer.a);
 	
 	var Events = require("pkg!Event");
 	var Rs = require("./Rs");
@@ -10,18 +7,17 @@ define(function (require, exports, module) {
 	var Audio = require("./Audio");
 	
 	var Kernel = {
-		Events: Events,
-		init : function( canvas_obj, audio_obj ){
-			Audio.init(audio_obj);
-			Board.init(canvas_obj);
-			this.Events.on("Kernel:Control:start", Kernel.control.start, Kernel.control);
-			this.Events.on("Kernel:Control:play", Kernel.control.play, Kernel.control);
-			this.Events.on("Kernel:Control:stop", Kernel.control.stop, Kernel.control);
-			this.Events.on("Kernel:Control:wait", Kernel.control.wait, Kernel.control);
-			this.Events.on("Kernel:Control:pause", Kernel.control.pause, Kernel.control);
-			this.Events.on("Kernel:Control:mute", Kernel.control.mute, Kernel.control);
-			this.Events.on("Kernel:Control:set_volume", Kernel.control.set_volume, Kernel.control);
-			this.Events.on("Kernel:Control:seek_to", Kernel.control.seek_to, Kernel.control);
+		init : function(){
+			Audio.init();
+			Board.init();
+			Events.on("Kernel:Control:start", Kernel.control.start, Kernel.control);
+			Events.on("Kernel:Control:play", Kernel.control.play, Kernel.control);
+			Events.on("Kernel:Control:stop", Kernel.control.stop, Kernel.control);
+			Events.on("Kernel:Control:wait", Kernel.control.wait, Kernel.control);
+			Events.on("Kernel:Control:pause", Kernel.control.pause, Kernel.control);
+			Events.on("Kernel:Control:mute", Kernel.control.mute, Kernel.control);
+			Events.on("Kernel:Control:set_volume", Kernel.control.set_volume, Kernel.control);
+			Events.on("Kernel:Control:seek_to", Kernel.control.seek_to, Kernel.control);
 		},
 		
 		status:function(){
