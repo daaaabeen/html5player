@@ -5,7 +5,7 @@
 			"jquery":"lib/jquery-1.9.1",
 			"pkg": "lib/requirejs/pkg",
 			"text": "lib/requirejs/text",
-			"bootstrap":"lib/bootstrap/js/bootstrap.min.js",
+			"bootstrap":"lib/bootstrap/js/bootstrap.min",
 		},
 		shim:{
 			"bootstrap":{
@@ -22,7 +22,7 @@
 	
 	
 	//////////// 入口 /////////////////
-	requirejs(["pkg!core"], function (App) {
+	requirejs(["pkg!core","bootstrap"], function (App) {
 	    var player = new App();
 	    return player;
 	});

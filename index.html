@@ -4,7 +4,8 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport"  content="width=device-width,initial-scale=1,user-scalable=no" >
 <title>html5电子白板播放器V3.0</title>
-<link rel="stylesheet" type="text/css" href="./css/reset.css">
+
+<link href="./js/lib/bootstrap/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" type="text/css" href="./css/style.css">
 <style>
 
@@ -13,10 +14,15 @@
 <body>
 <div class="wrap">
 	<div id="title">html5电子白板播放器V2.0</div>
-	<div class="view">
-		<canvas id="myCanvasBack" width="1024" height="693" >浏览器不支持</canvas>
-		<canvas id="myCanvasFront" width="1024" height="693" >浏览器不支持</canvas>
+	<div class="view-container">
+		<div class="view-back">
+			<canvas id="myCanvasBack" width="1024" height="693" >浏览器不支持</canvas>
+		</div>
+		<div class="view-front">
+			<canvas id="myCanvasFront" width="1024" height="693" >浏览器不支持</canvas>
+		</div>
 	</div>
+	
 	<div id="menu">
 
 		<div class="menu-left">

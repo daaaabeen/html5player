@@ -63,9 +63,12 @@ define(function (require, exports, module) {
 				var c_t = Math.ceil( w * this.total_time() );
 				console.log("moucemove time:"+c_t);
 				
-				var l = $("#timeline").offset().left;
-				var r = $("#timeline").offset().left + $("#timeline").width() - $("#show-time").width();
-				var s_t_p = e.pageX < l ? l : e.pageX > r ? r : e.pageX - ( $("#show-time").width() / 2 ) ;
+				
+				var l = 0;
+				var r = $("#timeline").width() - $("#show-time").width();
+				var s_t_p = e.pageX - $("#timeline").offset().left < l ? l : e.pageX - $("#timeline").offset().left > r ? r : e.pageX - $("#timeline").offset().left - ( $("#show-time").width() / 2 ) ;
+				
+				
 				$("#show-time").stop().css("left",s_t_p);
 				var h = Math.floor( c_t / 3600 ) ; //视频的时间 -小时
 				var m = Math.floor( ( c_t % 3600  ) / 60 );//视频的时间 -分钟
@@ -116,14 +119,15 @@ define(function (require, exports, module) {
 					var c_t = Math.ceil( w * this.total_time() );
 					console.log("moucemove time:"+c_t);
 					
-					var l = $("#timeline").offset().left;
-					var r = $("#timeline").offset().left + $("#timeline").width() - $("#show-time").width();
-					var s_t_p = e.pageX < l ? l : e.pageX > r ? r : e.pageX - ( $("#show-time").width() / 2 ) ;
+					var l = 0;
+					var r = $("#timeline").width() - $("#show-time").width();
+					var s_t_p = e.pageX - $("#timeline").offset().left < l ? l : e.pageX - $("#timeline").offset().left > r ? r : e.pageX - $("#timeline").offset().left - ( $("#show-time").width() / 2 ) ;
 					$("#show-time").css("left",s_t_p);
 					var h = Math.floor( c_t / 3600 ) ; //视频的时间 -小时
 					var m = Math.floor( ( c_t % 3600  ) / 60 );//视频的时间 -分钟
 					var s = c_t % 60 ;//视频的时间 -秒数
-					$("#show-time").html(h+":"+m+":"+s);		
+					$("#show-time").html(h+":"+m+":"+s);
+					$("#show-time").show();
 					
 				}
 				
