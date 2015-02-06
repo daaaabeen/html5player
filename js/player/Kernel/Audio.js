@@ -1,6 +1,6 @@
 console.log("load audio");
 define(function (require, exports, module) {
-	var Event = require("pkg!Event");
+	var Events = require("pkg!Event");
 	var config = require("pkg!config");
 	//console.log(config);
 	var Audio = {
@@ -9,6 +9,24 @@ define(function (require, exports, module) {
 			//_p是audio播放器的对象
 			var audioId = config.config.audio.audioId;
 			this._p = document.getElementById(audioId);
+			
+			this._p.addEventListener( 'loadeddata', function(){
+				
+			});
+
+			this._p.addEventListener( 'timeupdate', function(){ //时间改变
+				Events.trigger("Kernel:Control:timechange",this.current_time());
+			}.bind(this));
+
+			this._p.addEventListener( 'volumechange', function(){ //音量改变
+				
+			});
+
+			this._p.addEventListener( 'ended', function(){
+				//thePlayer.removeClass( cssClass.playing );
+			});
+			
+			
 		},
 		reset:function(){
 			this._p.currentTime = 0;

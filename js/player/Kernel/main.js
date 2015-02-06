@@ -130,6 +130,7 @@ define(function (require, exports, module) {
 					}else{//可以正常播放
 						
 						var c_t = Audio.current_time();//当前播放到的事件
+						
 						var now_t = Math.ceil(c_t);
 						if(this._last_time !== undefined){
 							if( this._last_time != now_t ){
@@ -138,12 +139,10 @@ define(function (require, exports, module) {
 									Board.reset();
 								}
 								this._last_time = now_t;
-								Events.trigger("Kernel:Control:timechange",now_t);
 							}
 							
 						}else{
 							this._last_time = now_t;
-							Events.trigger("Kernel:Control:timechange",now_t);
 						}
 						Board.draw(c_t);
 						

@@ -6,6 +6,16 @@ define(function (require, exports, module) {
 	
 	var v =  View.extend({
 		initialize:function(){
+			var isTouch		  = 'ontouchstart' in window,
+				eStart		  = isTouch ? 'touchstart'	: 'mousedown',
+				eMove		  = isTouch ? 'touchmove'	: 'mousemove',
+				eEnd		  = isTouch ? 'touchend'	: 'mouseup',
+				eCancel		  = isTouch ? 'touchcancel'	: 'mouseup',
+				secondsToTime = function( secs )
+				{
+					var hours = Math.floor( secs / 3600 ), minutes = Math.floor( secs % 3600 / 60 ), seconds = Math.ceil( secs % 3600 % 60 );
+					return ( hours == 0 ? '' : hours > 0 && hours.toString().length < 2 ? '0'+hours+':' : hours+':' ) + ( minutes.toString().length < 2 ? '0'+minutes : minutes ) + ':' + ( seconds.toString().length < 2 ? '0'+seconds : seconds );
+				};
 			
 			$("#play").click(function(){
 				var s = this.status();
@@ -18,119 +28,61 @@ define(function (require, exports, module) {
 				}
 				
 			}.bind(this));
-			/*
-			$("#mute").click(function(){
-				var o = $("#mute");
-				if( o.attr("data") == "on" ){
-					o.attr("data","off");
-					o.html("声音");
-					this.mute(true);
-				}else{
-					o.attr("data","on");
-					o.html("静音");
-					
-					this.mute(false) ;
-				}
-			}.bind(this));
-			
-			$("#voice-bar").mousedown(function(e){
-				this._changeVoice = true;
-				//alert($("#voice-bar").position().left);
-				
-				var width = ( e.pageX ) - ( $("#voice-bar").position().left ) ;
-				if( width< 0 ){
-					width = 0; 
-				}else if( width > $("#voice-bar").width() ){
-					width = $("#voice-bar").width();
-				}
-				//alert(width);
-				$("#current-voice").width( width );
-				this.set_volume(width / $("#voice-bar").width());
-				//alert(e.pageX + ", " + e.pageY);
-			
-			}.bind(this));
-			*/
-			$("#timeline").mousedown(function(e){
-				this._changeProcess = true;
-				console.log("#timeline mousedown");
-				$("#show-time").show();
-				
-				var w =( ( e.pageX ) - ( $("#timeline").offset().left ) ) / ( $("#timeline").width() );
+
+			var _seek_to =  function(e){
+				var theRealEvent = isTouch ? e.originalEvent.touches[ 0 ] : e;
+				var w =( ( theRealEvent.pageX ) - ( $("#timeline").offset().left ) ) / ( $("#timeline").width() );
 				console.log(w);
 				if( w < 0 ) w = 0;
 				if(w>1) w = 1;
-				$("#current-time").width(w*100+"%");
+				//$("#current-time").width(w*100+"%");
+				
+				
 				var c_t = Math.ceil( w * this.total_time() );
 				console.log("moucemove time:"+c_t);
 				
 				
 				var l = 0;
 				var r = $("#timeline").width() - $("#show-time").width();
-				var s_t_p = e.pageX - $("#timeline").offset().left < l ? l : e.pageX - $("#timeline").offset().left > r ? r : e.pageX - $("#timeline").offset().left - ( $("#show-time").width() / 2 ) ;
-				
-				
+				var s_t_p = theRealEvent.pageX - $("#timeline").offset().left < l ? l : theRealEvent.pageX - $("#timeline").offset().left > r ? r : theRealEvent.pageX - $("#timeline").offset().left - ( $("#show-time").width() / 2 ) ;
 				$("#show-time").stop().css("left",s_t_p);
+				
 				var h = Math.floor( c_t / 3600 ) ; //视频的时间 -小时
 				var m = Math.floor( ( c_t % 3600  ) / 60 );//视频的时间 -分钟
-				var s = c_t % 60 ;//视频的时间 -秒数
+				var s = Math.ceil(c_t % 60) ;//视频的时间 -秒数
+				
 				$("#show-time").html(h+":"+m+":"+s);
+				
+				
+				this.seek_to(c_t);
+			}.bind(this);
+			
+			
+			$("#timeline").on( eStart,function(e){
+				e.preventDefault();
+				this._changeProcess = true;
+				$("#show-time").show();
+				_seek_to(e);
 				
 			}.bind(this));
 			
 		
-			$(document).mouseup(function(e){
-				e || ( e = window.Event );
-				this._changeVoice && (this._changeVoice = void 0);
+			$(document).on( eCancel, function(e){
 				//alert("22");
+				e.preventDefault();
 				if(this._changeProcess){
+					_seek_to(e);
 					$("#show-time").hide();
-					var w = ( ( e.pageX ) - ( $("#timeline").offset().left ) ) / $("#timeline").width();
-					$("#current-time").width(w*100+"%");
-					var c_t = Math.ceil( w * this.total_time() );
-					console.log("mouseup seek_to:"+c_t);
-					this.seek_to(c_t);
 					this._changeProcess = void 0;
 				}
 			}.bind(this));
 			
-			$(document).mousemove(function(e){
-				//alert(p.changeVoice);
-				if(this._changeVoice === true){
-					//alert(33);
-					//$("span").text(e.pageX + ", " + e.pageY);
-					var width = ( e.pageX ) - ( $("#voice-bar").position().left ) ;
-					if( width< 0 ){
-						width = 0; 
-					}else if( width > $("#voice-bar").width() ){
-						width = $("#voice-bar").width();
-					}
-					//alert(width);
-					$("#current-voice").width( width );
-					this.set_volume( width / $("#voice-bar").width() ) ;
-					
-				}
-				
+			
+			$(document).on( eMove, function(e){
+				e.preventDefault();
 				if(this._changeProcess === true ){
-					var w =( ( e.pageX ) - ( $("#timeline").offset().left ) ) / ( $("#timeline").width() );
-					console.log(w);
-					if( w < 0 ) w = 0;
-					if(w>1) w = 1;
-					$("#current-time").stop().width(w*100+"%");
-					var c_t = Math.ceil( w * this.total_time() );
-					console.log("moucemove time:"+c_t);
-					
-					var l = 0;
-					var r = $("#timeline").width() - $("#show-time").width();
-					var s_t_p = e.pageX - $("#timeline").offset().left < l ? l : e.pageX - $("#timeline").offset().left > r ? r : e.pageX - $("#timeline").offset().left - ( $("#show-time").width() / 2 ) ;
-					$("#show-time").css("left",s_t_p);
-					var h = Math.floor( c_t / 3600 ) ; //视频的时间 -小时
-					var m = Math.floor( ( c_t % 3600  ) / 60 );//视频的时间 -分钟
-					var s = c_t % 60 ;//视频的时间 -秒数
-					$("#show-time").html(h+":"+m+":"+s);
-					$("#show-time").show();
-					
+					_seek_to(e);	
 				}
-				
 				//$("span").text(e.pageX + ", " + e.pageY);
 				
 			}.bind(this));
@@ -191,12 +143,12 @@ define(function (require, exports, module) {
 		
 		//当时间改变的时候
 		on_time_change:function(now_time){
-			if(this._changeProcess)return ;
+			//if(this._changeProcess)return ;
 			console.log("on_time_change");
 			console.log("new_time:"+now_time);
 			var h = Math.floor( now_time / 3600 ) ; //视频的时间 -小时
 			var m = Math.floor( ( now_time % 3600  ) / 60 );//视频的时间 -分钟
-			var s = now_time % 60 ;//视频的时间 -秒数
+			var s = Math.ceil( now_time % 60 ) ;//视频的时间 -秒数
 			$("#s").html(s);							
 			$("#m").html(m);
 			$("#h").html(h);
@@ -205,7 +157,7 @@ define(function (require, exports, module) {
 			if(cct>100){
 				cct = 100;
 			}
-			$("#current-time").animate({ width : cct+"%" },980);
+			$("#current-time").css({ width : cct+"%" });
 		},
 		
 		/*
