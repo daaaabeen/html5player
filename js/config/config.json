@@ -1,0 +1,9 @@
+{
+	"canvas":{
+		"frontId":"myCanvasFront",
+		"backId":"myCanvasBack"
+	},
+	"audio":{
+		"audioId":"audio"
+	}
+}

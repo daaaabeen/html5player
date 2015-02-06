@@ -1,0 +1,76 @@
+@CHARSET "UTF-8";
+html,body{width:100%;height:100%;overflow:hidden;}
+.wrap{width:100%;height:100%;overflow:hidden;background:#333;margin:0 auto;position:relative;}
+#title{height:25px;width:100%;line-height:25px;background:#212227;color:#FFFFFF;position:relative;}
+.view-container{width:100%;cursor:pointer;position:relative;
+	height:auto;
+	height:-moz-calc(100% - 105px);
+	height:-webkit-calc(100% - 105px);
+	height: calc(100% - 105px);
+}
+.view-back{border:0 solid #555;width:100%;cursor:pointer;position:relative;
+	z-index:100;
+	height:100%;
+}
+
+#myCanvasBack{
+	display:block;margin:0 auto;
+	cursor:pointer; 
+	width:auto;
+	max-width:100%;
+	height:100%;
+	background:#fff;
+}
+
+.view-front{border:0 solid #555;width:100%;cursor:pointer;position:absolute;top:0;left:0;width:100%;
+	z-index:101;
+	height:100%;
+}
+#myCanvasFront{
+	display:block;margin:0 auto;
+	cursor:pointer; 
+	width:auto;
+	max-width:100%;
+	height:100%;
+}
+
+#menu{height:80px;width:100%;border:0 solid #555;background:#B7B6B6;position:relative;}
+#timeline{margin-left:80px; margin-right:160px; height:3px;border:1px solid #888;background-color:#fff;border-radius:3px;
+		overflow:hideen;cursor:pointer; position:relative;top:30px;position:relative;}
+#timeline:hover{height:5px;z-index:100;top:29px;}
+#current-time{display:inline-block;height:3px;width:0;background-color:red;border-radius: 3px;position:relative;}
+#show-time{position:absolute;display:none; width:60px;height:30px;top:-40px;border:0px #000 solid;background:#ccc;z-index:10001; 
+		text-align:center; border-radius: 15px; line-height:30px;}
+#timeline:hover #current-time{height:5px; }
+
+.menu-left{height:80px;width:80px;float:left;left:0;top:0;}
+.menu-right{height:80px;width:160px;float:right;right:0;top:0;}
+#play{ height:65px;width:65px;float:left;margin:5px;/*background-color:green;*/ cursor:pointer; border-radius: 15px; }
+.play{background: url(../img/icon.png) -100px -10px no-repeat; }
+.stop{background: url(../img/icon.png) -405px -93px no-repeat; }
+
+#time-view{ height:25px;width:150px;float:left;margin:21px 5px;text-align:left;}
+
+@media all and (orientation : landscape) {/*横屏*/
+	#myCanvasBack{ 
+		width:auto;
+		height:100%;
+	}
+	#myCanvasFront{ 
+		width:auto;
+		height:100%;
+	}
+} 
+@media all and (orientation : portrait){ /*竖屏*/
+	#myCanvasBack{
+		width:100%;
+		height:auto;
+	}
+	#myCanvasFront{
+		width:100%;
+		height:auto;
+	}
+	.view-container{
+		height:auto;
+	}
+} 
