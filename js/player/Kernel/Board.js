@@ -62,11 +62,32 @@ define(function (require, exports, module) {
 		//播放到这个时间点
 		draw : function( t ){
 			
-			
 			var win = function(){
 				console.log("render success!");
+				var trail_class = this._records[this._index].class;
+				if( trail_class == "DRStrokeRecord" ){
+					this._tmpObj || ( this._tmpObj = [] );
+					this._tmpObj.push( this._records[this._index] );
+					if( this._records[this._index].phase == "2" ){
+						this.painter.tool_redo_undo.undo_stack.push( this._tmpObj );
+						this.painter.tool_redo_undo.redo_stack.clear();
+						this._tmpObj = void 0;
+					}
+				
+				}else if( trail_class == "DRContextRecord" ){
+					this._tmpObj || ( this._tmpObj = [] );
+					this._tmpObj.push( this._records[this._index] );
+				
+				}else if( trail_class == "DRFileRecord" || trail_class == "DRClearCanvasRecord" ){
+					this._tmpObj || ( this._tmpObj = [] );
+					this._tmpObj.push( this._records[this._index] );
+					this.painter.tool_redo_undo.undo_stack.push( this._tmpObj );
+					this.painter.tool_redo_undo.redo_stack.clear();
+					this._tmpObj = void 0;
+				}	
 				this._index++;
 				console.log(this._index);
+			
 			}.bind(this);
 			
 			var fail = function(){
@@ -80,13 +101,20 @@ define(function (require, exports, module) {
 				//class: DRContextRecord / DRStrokeRecord
 				
 				trail_class = this._records[this._index].class;
-				if( trail_class == "DRContextRecord" || trail_class == "DRStrokeRecord" || trail_class == "DRClearCanvasRecord" ){
-					
+				if(  trail_class == "DRStrokeRecord" ){
 					console.log("class:" + trail_class);
 					this.painter.read_and_parse( this._records[this._index] , win  );
 					
 				}else if(trail_class == "DRFileRecord" ){//插入图片，ppt，文件等
 					
+					console.log("class:" + trail_class);
+					this.painter.read_and_parse( this._records[this._index] , win , fail  );
+					
+				}else if( trail_class == "DRClearCanvasRecord" ){
+					console.log("class:" + trail_class);
+					this.painter.read_and_parse( this._records[this._index] , win  );
+					
+				}else if(trail_class == "DRRevokeRecord" || trail_class == "DRRedoRecord" || trail_class == "DRContextRecord" ){//redo undo 
 					console.log("class:" + trail_class);
 					this.painter.read_and_parse( this._records[this._index] , win , fail  );
 					
@@ -96,6 +124,9 @@ define(function (require, exports, module) {
 				
 			}
 		},
+		
+		
+		
 		
 		painter:{
 			
@@ -108,6 +139,7 @@ define(function (require, exports, module) {
 			
 			
 			read_and_parse:function( obj , win ,fail ){
+				
 				if( obj.class == "DRContextRecord" ){
 					var type = obj.type;
 					if(type == 1){//设置画笔颜色
@@ -144,11 +176,59 @@ define(function (require, exports, module) {
 					win();
 				}else if( obj.class == "DRFileRecord" ){
 					this.tool_file.render(obj,win,fail);
+				}else if( obj.class == "DRRevokeRecord" ){
+					this.tool_redo_undo.undo(obj,this.redo_undo_print.bind(this),win);
+				}else if( obj.class == "DRRedoRecord" ){
+					this.tool_redo_undo.redo(obj,this.redo_undo_print.bind(this),win);
 				}
-				
-				
-				
+					
 			},
+			
+			//绘制undo列表中的
+			redo_undo_print : function(){
+				this.tool_clear.render();
+				var s = this.tool_redo_undo.undo_stack.get_stack();
+				for( var i = 0; i < s.length; i++  ){
+					for(var j = 0; j<s[i].length; j++){	
+						var obj = s[i][j];
+						if( obj.class == "DRContextRecord" ){
+							var type = obj.type;
+							if(type == 1){//设置画笔颜色
+								
+								this.set_painter_color(obj.data);
+								
+							}else if( type == 2 ){//设置画笔粗细
+								this.set_painter_line_width(obj.data);
+								
+							
+							}else if( type == 3 ){//设置混合模式（正常或者擦除）
+								this.set_painter_mode(obj.data);
+								
+							
+							}else if( type == 4 ){//插入一个新的页面 
+								this.tool_page.insert_page( obj  );
+								
+							}else if( type == 5 ){//幻灯片翻到下一页
+								this.tool_file.turn_page( obj );
+							}
+							
+						}else if( obj.class == "DRStrokeRecord" ){
+							if( this.painter_mode() == "erase" ){
+								this.tool_erase.render(obj);
+							}else if( this.painter_mode() == "pencil" ){
+								this.tool_pencil.render(obj);
+							}
+						}else if( obj.class == "DRClearCanvasRecord" ){
+							this.tool_clear.render();
+						}else if( obj.class == "DRFileRecord" ){
+							this.tool_file.render(obj);
+						}
+					}
+					
+				}	
+			},
+			
+			
 			
 			//设置画笔的颜色
 			set_painter_color:function( data , win ){
@@ -453,7 +533,74 @@ define(function (require, exports, module) {
 				}
 			},
 			//tool_clear
+			
+			
+			tool_redo_undo:{
+				//撤回
+				redo : function(obj,print,win){
+					this.undo_stack.push( this.redo_stack.pop() );
+					print();
+					win();
+				},
 				
+				//撤销
+				undo : function(obj,print,win){
+					this.redo_stack.push( this.undo_stack.pop() );
+					print();
+					win();
+				},
+				redo_stack : {
+					push : function(obj){
+						this._redo_stack || ( this._redo_stack = [] );
+						return this._redo_stack.push(obj);
+					},
+					pop : function(){
+						if(this._redo_stack){
+							if( this._redo_stack.length > 0 ){
+								return this._redo_stack.pop();
+							}else{
+								return false;
+							}
+						}else{
+							return false;
+						}
+					},
+					get_stack : function(){
+						return this._redo_stack || [];
+					},
+					clear : function(){
+						this._redo_stack = void 0;
+					}
+				},
+				
+				undo_stack : {
+					
+					push : function(obj){
+						this._undo_stack || ( this._undo_stack = [] );
+						return this._undo_stack.push(obj);
+					},
+					pop : function(){
+						if(this._undo_stack){
+							if( this._undo_stack.length > 0 ){
+								return this._undo_stack.pop();
+							}else{
+								return false;
+							}
+						}else{
+							return false;
+						}
+					},
+					get_stack : function(){
+						return this._undo_stack || [];
+					},
+					clear : function(){
+						this._undo_stack = void 0;
+					}
+				}
+			}
+			//tool_redo_undo
+		
+			
 		}
 		//painter
 		
