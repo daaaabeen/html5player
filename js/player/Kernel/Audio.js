@@ -29,7 +29,7 @@ define(function (require, exports, module) {
 			
 		},
 		reset:function(){
-			this._p.currentTime = 0;
+			//this._p.currentTime = 0;
 		},
 		
 		//设置播放资源的源地址
