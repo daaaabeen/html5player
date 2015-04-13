@@ -259,20 +259,53 @@ define(function (require, exports, module) {
 	
 			},
 			
+			compute_line_width_from_speed : function( base_width, obj ){
+				var width = base_width;		
+				if( obj.phase != 0 ){
+					
+					var l =Math.sqrt( Math.sqrt( Math.sqrt( ( obj.x - this._last_x ) * ( obj.x - this._last_x ) + ( obj.y - this._last_y ) * ( obj.y - this._last_y ) ))); 
+					var v = ( obj.timestamp - this._last_t ) / l ;
+					this._base_v || (this._base_v = v);
+					var tmp_w = v / this._base_v * base_width ;
+					(width > tmp_w) && ( width = tmp_w );
+					console.info("width:", width ," x:", obj.x," y:",obj.y ); 
+				} 
+				if( obj.phase == 2 ){
+					this._last_t = this._last_x = this._last_y = this._base_v = void 0;
+				}else{
+					this._last_t = obj.timestamp;
+					this._last_x = obj.x;
+					this._last_y = obj.y;
+				}
+				return width; 
+				
+			},
+			
 			render:function(data){
 				/*
 					{"class":"DRStrokeRecord", "timestamp":5.132204, "strokeId":6175405760, "phase":0, "x":561.000000, "y":229.500000},
 			     */
 				var contxt = this.get_context(data.strokeId);
+				contxt.lineWidth = this.compute_line_width_from_speed( Painter.painter_line_width() , data );
 				if( data.phase == 0 ){
-					contxt.beginPath(); 
-					contxt.moveTo( data.x, data.y ); // 移动到坐标 50 50 
+					//contxt.beginPath(); 
+					//contxt.moveTo( data.x, data.y ); // 移动到坐标 50 50 
+					this._last_render_x = data.x;
+					this._last_render_y = data.y;
+					
 				}else if( data.phase == 1 ){
-					contxt.lineTo( data.x, data.y ); // 划出轨迹到 150 150
+					contxt.beginPath(); 
+					contxt.moveTo( this._last_render_x, this._last_render_y ); // 移动到坐标 
+					contxt.lineTo( data.x, data.y ); // 划出轨迹到 
 					contxt.stroke();
+					this._last_render_x = data.x;
+					this._last_render_y = data.y;
 				}else{
-					contxt.lineTo( data.x, data.y ); // 划出轨迹到 150 150
+					contxt.beginPath(); 
+					contxt.moveTo( this._last_render_x, this._last_render_y ); // 移动到坐标 
+					contxt.lineTo( data.x, data.y ); // 划出轨迹到 
 					contxt.stroke();
+					this._last_render_x = this._last_render_y = void 0;
 					this.del_context(data.strokeId);
 				}
 				
