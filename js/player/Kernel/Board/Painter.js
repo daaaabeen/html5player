@@ -17,29 +17,35 @@ define(function (require, exports, module) {
 			this.tool_page.reset();
 		},
 			
-			
 		read_and_parse:function( obj , win ,fail ){
+			
+			var success = function(){
+				this.push_obj_2_undo_stack(obj);
+				( typeof win === "function" ) && win();
+			}.bind(this);
 			
 			if( obj.class == "DRContextRecord" ){
 				var type = obj.type;
 				if(type == 1){//设置画笔颜色
-					
 					this.set_painter_color(obj.data);
-					( typeof win === "function" ) && win();
+					success();
 				}else if( type == 2 ){//设置画笔粗细
 					this.set_painter_line_width(obj.data);
-					( typeof win === "function" ) && win();
+					success();
 				
 				}else if( type == 3 ){//设置混合模式（正常或者擦除）
 					this.set_painter_mode(obj.data);
-					( typeof win === "function" ) && win();
-				
+					success();
 				}else if( type == 4 ){//插入一个新的页面 
-					this.tool_page.insert_page( obj , win );
+					this.tool_page.insert_page( obj , success );
 					
 				}else if( type == 5 ){//幻灯片翻到下一页
-					this.tool_file.turn_page( obj, win, fail );
+					this.tool_file.turn_page( obj, success, fail );
+				}else{
+					success();
 				}
+				
+				
 				
 			}else if( obj.class == "DRStrokeRecord" ){
 				if( this.painter_mode() == "erase" ){
@@ -50,12 +56,19 @@ define(function (require, exports, module) {
 					console.log("未定义的工具！");
 					console.log(obj);
 				}
+				this.push_obj_2_undo_stack(obj);
 				win();
 			}else if( obj.class == "DRClearCanvasRecord" ){
 				this.tool_clear.render();
+				this.push_obj_2_undo_stack();
 				win();
 			}else if( obj.class == "DRFileRecord" ){
-				this.tool_file.render(obj,win,fail);
+				var success = function(){
+					console.info(obj);
+					this.push_obj_2_undo_stack(obj);
+					win();
+				}.bind(this);
+				this.tool_file.render( obj, success, fail );
 			}else if( obj.class == "DRRevokeRecord" ){
 				this.tool_redo_undo.undo(obj,this.redo_undo_print.bind(this),win);
 			}else if( obj.class == "DRRedoRecord" ){
@@ -415,6 +428,33 @@ define(function (require, exports, module) {
 		//tool_clear
 		
 		
+		//将轨迹加入到栈中
+		push_obj_2_undo_stack : function( obj ){
+			 
+			var trail_class = obj.class;
+			if( trail_class == "DRStrokeRecord" ){
+				this._tmpObj || ( this._tmpObj = [] );
+				this._tmpObj.push( obj );
+				if( obj.phase == "2" ){
+					this.tool_redo_undo.undo_stack.push( this._tmpObj );
+					this.tool_redo_undo.redo_stack.clear();
+					this._tmpObj = void 0;
+				}
+			
+			}else if( trail_class == "DRContextRecord" ){
+				this._tmpObj || ( this._tmpObj = [] );
+				this._tmpObj.push( obj );
+			
+			}else if( trail_class == "DRFileRecord" || trail_class == "DRClearCanvasRecord" ){
+				this._tmpObj || ( this._tmpObj = [] );
+				this._tmpObj.push( obj );
+				this.tool_redo_undo.undo_stack.push( this._tmpObj );
+				this.tool_redo_undo.redo_stack.clear();
+				this._tmpObj = void 0;
+			}
+			 
+		},
+				
 		tool_redo_undo:{
 			reset:function(){
 				this.redo_stack.clear();

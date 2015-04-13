@@ -172,8 +172,7 @@ define(function (require, exports, module) {
 							
 						}
 					}else{
-						clearInterval(k_c_p_run);
-						console.log("clear:k_c_p_run");
+						clearInterval(k_c_w_run);
 					}
 					
 				}.bind(this),50);

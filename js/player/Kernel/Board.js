@@ -67,27 +67,6 @@ define(function (require, exports, module) {
 			
 			var win = function(){
 				console.log("render success!");
-				var trail_class = this._records[this._index].class;
-				if( trail_class == "DRStrokeRecord" ){
-					this._tmpObj || ( this._tmpObj = [] );
-					this._tmpObj.push( this._records[this._index] );
-					if( this._records[this._index].phase == "2" ){
-						Painter.tool_redo_undo.undo_stack.push( this._tmpObj );
-						Painter.tool_redo_undo.redo_stack.clear();
-						this._tmpObj = void 0;
-					}
-				
-				}else if( trail_class == "DRContextRecord" ){
-					this._tmpObj || ( this._tmpObj = [] );
-					this._tmpObj.push( this._records[this._index] );
-				
-				}else if( trail_class == "DRFileRecord" || trail_class == "DRClearCanvasRecord" ){
-					this._tmpObj || ( this._tmpObj = [] );
-					this._tmpObj.push( this._records[this._index] );
-					Painter.tool_redo_undo.undo_stack.push( this._tmpObj );
-					Painter.tool_redo_undo.redo_stack.clear();
-					this._tmpObj = void 0;
-				}	
 				this._index++;
 				console.log(this._index);
 			
