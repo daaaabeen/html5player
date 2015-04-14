@@ -20,6 +20,8 @@ define(function (require, exports, module) {
 		read_and_parse:function( obj , win ,fail ){
 			
 			var success = function(){
+				console.log(win);
+				this.push_obj_2_pages(obj);
 				this.push_obj_2_undo_stack(obj);
 				( typeof win === "function" ) && win();
 			}.bind(this);
@@ -36,17 +38,15 @@ define(function (require, exports, module) {
 				}else if( type == 3 ){//设置混合模式（正常或者擦除）
 					this.set_painter_mode(obj.data);
 					success();
-				}else if( type == 4 ){//插入一个新的页面 
-					this.tool_page.insert_page( obj , success );
+				}else if( type == 4 ){//翻到下一页 
+					this.tool_page.next_page( obj , this.turn_page_print.bind(this), success );
 					
-				}else if( type == 5 ){//幻灯片翻到下一页
-					this.tool_file.turn_page( obj, success, fail );
+				}else if( type == 6 ){//幻灯片翻到上一页
+					this.tool_page.pre_page( obj, this.turn_page_print.bind(this), success );
 				}else{
 					success();
 				}
-				
-				
-				
+
 			}else if( obj.class == "DRStrokeRecord" ){
 				if( this.painter_mode() == "erase" ){
 					this.tool_erase.render(obj);
@@ -56,23 +56,16 @@ define(function (require, exports, module) {
 					console.log("未定义的工具！");
 					console.log(obj);
 				}
-				this.push_obj_2_undo_stack(obj);
-				win();
+				success(obj);
 			}else if( obj.class == "DRClearCanvasRecord" ){
 				this.tool_clear.render();
-				this.push_obj_2_undo_stack();
-				win();
+				success(obj);
 			}else if( obj.class == "DRFileRecord" ){
-				var success = function(){
-					console.info(obj);
-					this.push_obj_2_undo_stack(obj);
-					win();
-				}.bind(this);
 				this.tool_file.render( obj, success, fail );
 			}else if( obj.class == "DRRevokeRecord" ){
-				this.tool_redo_undo.undo(obj,this.redo_undo_print.bind(this),win);
+				this.tool_redo_undo.undo(obj,this.redo_undo_print.bind(this),success);
 			}else if( obj.class == "DRRedoRecord" ){
-				this.tool_redo_undo.redo(obj,this.redo_undo_print.bind(this),win);
+				this.tool_redo_undo.redo(obj,this.redo_undo_print.bind(this),success);
 			}
 				
 		},
@@ -87,22 +80,11 @@ define(function (require, exports, module) {
 					if( obj.class == "DRContextRecord" ){
 						var type = obj.type;
 						if(type == 1){//设置画笔颜色
-							
 							this.set_painter_color(obj.data);
-							
 						}else if( type == 2 ){//设置画笔粗细
 							this.set_painter_line_width(obj.data);
-							
-						
 						}else if( type == 3 ){//设置混合模式（正常或者擦除）
 							this.set_painter_mode(obj.data);
-							
-						
-						}else if( type == 4 ){//插入一个新的页面 
-							this.tool_page.insert_page( obj  );
-							
-						}else if( type == 5 ){//幻灯片翻到下一页
-							this.tool_file.turn_page( obj );
 						}
 						
 					}else if( obj.class == "DRStrokeRecord" ){
@@ -116,6 +98,53 @@ define(function (require, exports, module) {
 					}else if( obj.class == "DRFileRecord" ){
 						this.tool_file.render(obj);
 					}
+				}
+				
+			}	
+		},
+		
+		//翻页后绘制页码中的
+		turn_page_print : function(){
+			this.tool_clear.render();
+			var s = this.tool_page.get_current_page_data();
+			var success = function(){
+				this.push_obj_2_undo_stack(obj);
+			}.bind(this);
+			for( var i = 0; i < s.length; i++  ){
+				var obj =  s[i];
+				if( obj.class == "DRContextRecord" ){
+					var type = obj.type;
+					if(type == 1){//设置画笔颜色
+						this.set_painter_color(obj.data);
+						success();
+					}else if( type == 2 ){//设置画笔粗细
+						this.set_painter_line_width(obj.data);
+						success();
+					
+					}else if( type == 3 ){//设置混合模式（正常或者擦除）
+						this.set_painter_mode(obj.data);
+						success();
+					}
+
+				}else if( obj.class == "DRStrokeRecord" ){
+					if( this.painter_mode() == "erase" ){
+						this.tool_erase.render(obj);
+					}else if( this.painter_mode() == "pencil" ){
+						this.tool_pencil.render(obj);
+					}else {
+						console.log("未定义的工具！");
+						console.log(obj);
+					}
+					success(obj);
+				}else if( obj.class == "DRClearCanvasRecord" ){
+					this.tool_clear.render();
+					success(obj);
+				}else if( obj.class == "DRFileRecord" ){
+					this.tool_file.render( obj, success, fail );
+				}else if( obj.class == "DRRevokeRecord" ){
+					this.tool_redo_undo.undo(obj,this.redo_undo_print.bind(this),success);
+				}else if( obj.class == "DRRedoRecord" ){
+					this.tool_redo_undo.redo(obj,this.redo_undo_print.bind(this),success);
 				}
 				
 			}	
@@ -160,24 +189,42 @@ define(function (require, exports, module) {
 		painter_mode:function(){
 			return this._painter_mode ? this._painter_mode : "pencil";
 		},
+		
+		//将数据加入到页码列表中
+		push_obj_2_pages: function(obj){
 			
+			if( obj.class == "DRContextRecord" ){
+				if(obj.type > 3)return ;
+			}
+			this.tool_page.push_obj(obj);
+		},
+		
 		//页码管理工具
 		tool_page : {
 			reset : function(){
 				this._pages = [];
-			},
-			//存放page的列表
-			_pages : [],
-			
-			get current_page(){
-				(this._current_page == undefined)  || (this._current_page = 0 ); 
-				return this._current_page;
-			},
-			set current_page(value){
-				this._current_page = value;
+				this._current_page = 0;
 			},
 			
+			//将数据插入到页码列表中
+			push_obj : function(obj){
+				
+				this._pages || (this._pages = []);
+				this._current_page ||  (this._current_page = 0);
+				this._pages[this._current_page] || (this._pages[this._current_page] = []);
+				this._pages[this._current_page].push(obj);
+			
+			},
+			
+			//获取当前页码的内容
+			get_current_page_data : function(){
+				this._pages || (this._pages = []);
+				this._current_page ||  (this._current_page = 0);
+				return this._pages[this._current_page] || (this._pages[this._current_page] = []);
+				
+			},
 			//插入一个页面
+			/*
 			insert_page : function(data , win, fail ){
 				
 				page = data.data;
@@ -196,23 +243,19 @@ define(function (require, exports, module) {
 				(typeof win === "function") && win();
 				
 			},
-				
+			*/
 			//下一页
-			next_page : function(obj,win,fail){
+			next_page : function( obj,print,win,fail ){
 				
-				var contxt = Painter.f_c.getContext("2d");
-				var w = Painter.f_c.width;
-				var h = Painter.f_c.height;
-				var imgData = contxt.getImageData( 0, 0, w, h );
-				this._pages[ this.current_page ] = imgData;
-				contxt.clearRect( 0, 0, w , h );
-				this.current_page++;
-				imgData = null;
-				this._pages[this.current_page] || ( imgData = this._pages[this.current_page] )  ;
-				
-				if(imgData) contxt.drawImage( imgData, 0, 0, w, h );
+				this._current_page++;
+				print();
 				(typeof win === "function") && win();
 			
+			},
+			pre_page :function( obj,print,win ){
+				( this._current_page > 0 ) && this._current_page--;
+				print();
+				(typeof win === "function") && win();
 			}
 		
 		},
@@ -261,14 +304,18 @@ define(function (require, exports, module) {
 			
 			compute_line_width_from_speed : function( base_width, obj ){
 				var width = base_width;		
+				var level = 2; //平滑度
 				if( obj.phase != 0 ){
-					
-					var l =Math.sqrt( Math.sqrt( Math.sqrt( ( obj.x - this._last_x ) * ( obj.x - this._last_x ) + ( obj.y - this._last_y ) * ( obj.y - this._last_y ) ))); 
-					var v = ( obj.timestamp - this._last_t ) / l ;
+					var l = Math.sqrt( ( obj.x - this._last_x ) * ( obj.x - this._last_x ) + ( obj.y - this._last_y ) * ( obj.y - this._last_y ) ); 
+					var v = ( obj.timestamp - this._last_t ) / l;//v的倒数
 					this._base_v || (this._base_v = v);
-					var tmp_w = v / this._base_v * base_width ;
+					var p = v / this._base_v ; 
+					for( var i = 0; i<level; p = Math.sqrt(p),i++ );
+					
+					var tmp_w = p * base_width;
+					
 					(width > tmp_w) && ( width = tmp_w );
-					console.info("width:", width ," x:", obj.x," y:",obj.y ); 
+					console.info("width:", width ," x:", obj.x," y:",obj.y," l:",l," v:",v ); 
 				} 
 				if( obj.phase == 2 ){
 					this._last_t = this._last_x = this._last_y = this._base_v = void 0;
@@ -282,9 +329,7 @@ define(function (require, exports, module) {
 			},
 			
 			render:function(data){
-				/*
-					{"class":"DRStrokeRecord", "timestamp":5.132204, "strokeId":6175405760, "phase":0, "x":561.000000, "y":229.500000},
-			     */
+				
 				var contxt = this.get_context(data.strokeId);
 				contxt.lineWidth = this.compute_line_width_from_speed( Painter.painter_line_width() , data );
 				if( data.phase == 0 ){
@@ -295,6 +340,8 @@ define(function (require, exports, module) {
 					
 				}else if( data.phase == 1 ){
 					contxt.beginPath(); 
+					contxt.lineJoin="round";
+					contxt.lineCap="round";
 					contxt.moveTo( this._last_render_x, this._last_render_y ); // 移动到坐标 
 					contxt.lineTo( data.x, data.y ); // 划出轨迹到 
 					contxt.stroke();
@@ -302,6 +349,8 @@ define(function (require, exports, module) {
 					this._last_render_y = data.y;
 				}else{
 					contxt.beginPath(); 
+					contxt.lineJoin="round";
+					contxt.lineCap="round";
 					contxt.moveTo( this._last_render_x, this._last_render_y ); // 移动到坐标 
 					contxt.lineTo( data.x, data.y ); // 划出轨迹到 
 					contxt.stroke();
@@ -376,7 +425,6 @@ define(function (require, exports, module) {
 						(typeof fail == "function") && fail();
 					}
 				}
-				
 				
 			},
 		},
@@ -475,8 +523,10 @@ define(function (require, exports, module) {
 				}
 			
 			}else if( trail_class == "DRContextRecord" ){
-				this._tmpObj || ( this._tmpObj = [] );
-				this._tmpObj.push( obj );
+				if(obj.type < 4){
+					this._tmpObj || ( this._tmpObj = [] );
+					this._tmpObj.push( obj );	
+				}
 			
 			}else if( trail_class == "DRFileRecord" || trail_class == "DRClearCanvasRecord" ){
 				this._tmpObj || ( this._tmpObj = [] );
