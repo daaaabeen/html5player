@@ -1,5 +1,4 @@
 Html5CanvasPlayer v3.0
-2015-01-16
 ====================
 Copyright (c) 2014 dianbin lee
 
