@@ -14,9 +14,9 @@ define(function (require, exports, module) {
 			return this._file_or_ppt; 
 		},
 		init:function( url, Audio_set_src, Board_set_trail , Audio_can_play){
-			
+			console.group("Rs::init");
 			if(this._hasinited)return ;
-			console.log("src=\""+url+"/audio.mp3\"");
+			//console.log("src=\""+url+"/audio.mp3\"");
 			Audio_set_src( url+"/audio.mp3" );
 			
 			$.ajax({
@@ -24,7 +24,7 @@ define(function (require, exports, module) {
 				dataType:"json",
 				async : false,
 				success:function(data){
-					console.log(data);
+					//console.log(data);
 					Board_set_trail( data );
 					//图片预加载-----------------------------------------
 					var k_rs_preload = function(record){
@@ -72,6 +72,8 @@ define(function (require, exports, module) {
 				}
 				
 			}.bind(this),50);
+			
+			console.groupEnd("Rs::init");
 			
 			
 			

@@ -12,6 +12,7 @@ define(function (require, exports, module) {
 			Board.init();
 			Events.on("Kernel:Control:start", Kernel.control.start, Kernel.control);
 			Events.on("Kernel:Control:play", Kernel.control.play, Kernel.control);
+			Events.on("Kernel:Control:timechange", Kernel.control.playing, Kernel.control);
 			Events.on("Kernel:Control:stop", Kernel.control.stop, Kernel.control);
 			Events.on("Kernel:Control:wait", Kernel.control.wait, Kernel.control);
 			Events.on("Kernel:Control:pause", Kernel.control.pause, Kernel.control);
@@ -106,51 +107,38 @@ define(function (require, exports, module) {
 			},
 			
 			//播放
+			
 			play:function(success){
 				this.change_status(this._code.play);
 				console.log("调用：Kernel.Control.play");
 				Audio.play();
-				var k_c_p_run = setInterval(function(){
-					//判断是否可以播放
-					if( Audio.is_over() ){
-						clearInterval( k_c_p_run );
-						console.log("clear:k_c_p_run");
-						Events.trigger("Kernel:Control:stop");
-						
-					}else if( !Audio.can_play() || !Board.can_play() ){//不能正常播放需要缓冲
-						clearInterval( k_c_p_run );
-						console.log("clear:k_c_p_run");
-						Events.trigger("Kernel:Control:wait");
-						
-					}else if(this._code.pause == this._status ){//暂停了
-						
-						clearInterval( k_c_p_run );
-						console.log("clear:k_c_p_run");
-						
-					}else{//可以正常播放
-						
-						var c_t = Audio.current_time();//当前播放到的事件
-						
-						var now_t = Math.ceil(c_t);
-						if(this._last_time !== undefined){
-							if( this._last_time != now_t ){
-								if( now_t<this._last_time ){
-									//清空画布
-									Board.reset();
-								}
-								this._last_time = now_t;
+				
+			},
+			
+			playing:function(c_t){
+				console.group("playing",c_t);
+				//c_t 当前播放到的事件
+				
+				if( !Board.can_play() ){//不能正常播放需要缓冲
+					Events.trigger("Kernel:Control:wait");
+				
+				}else{//可以正常播放		
+					var now_t = Math.ceil(c_t);
+					if(this._last_time !== undefined){
+						if( this._last_time != now_t ){
+							if( now_t<this._last_time ){
+								//清空画布
+								Board.reset();
 							}
-							
-						}else{
 							this._last_time = now_t;
 						}
-						Board.draw(c_t);
 						
+					}else{
+						this._last_time = now_t;
 					}
-					
-				}.bind(this),100);
-				
-				
+					Board.draw(c_t);
+				}
+				console.groupEnd("playing",c_t);
 			},
 			
 			//暂停
@@ -172,8 +160,7 @@ define(function (require, exports, module) {
 							
 						}
 					}else{
-						clearInterval(k_c_p_run);
-						console.log("clear:k_c_p_run");
+						clearInterval(k_c_w_run);
 					}
 					
 				}.bind(this),50);
