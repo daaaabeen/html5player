@@ -11,24 +11,55 @@ define(function (require, exports, module) {
 			this._p = document.getElementById(audioId);
 			
 			this._p.addEventListener( 'loadeddata', function(){
-				
+				console.info("audio:loadeddata");
 			});
 
-			this._p.addEventListener( 'timeupdate', function(){ //时间改变
+			this._p.addEventListener( 'timeupdate', function(e){ //时间改变
 				Events.trigger("Kernel:Control:timechange",this.current_time());
 			}.bind(this));
 
-			this._p.addEventListener( 'volumechange', function(){ //音量改变
-				
+			this._p.addEventListener( 'volumechange', function(e){ //音量改变
+				console.info("audio:volumechange");
 			});
 
-			this._p.addEventListener( 'ended', function(){
+			this._p.addEventListener( 'ended', function(e){
 				//thePlayer.removeClass( cssClass.playing );
+				console.info("audio:ended");
+				Events.trigger("Kernel:Control:stop");
 			});
 			
+			this._p.addEventListener( 'waiting', function(e){
+				//thePlayer.removeClass( cssClass.playing );
+				console.info("audio:wait");
+				Events.trigger("Kernel:Control:wait");
+				
+			});
 			
+			this._p.addEventListener( 'canplay', function(e){
+				console.info("audio:canplay");
+			});
+			
+			this._p.addEventListener( 'pause', function(e){ 
+				console.info("audio:pause");
+			});
+			
+			this._p.addEventListener( 'play', function(e){
+				//thePlayer.removeClass( cssClass.playing );
+				console.info("audio:play");
+			});
+			this._p.addEventListener( 'playing', function(e){
+				//thePlayer.removeClass( cssClass.playing );
+				console.info("audio:playing");
+				
+			});
+			
+			this._p.addEventListener( 'progress', function(e){ //加载过程
+				
+			});
 		},
 		reset:function(){
+			console.group("Audio reset!!");
+			console.groupEnd("Audio reset!!");
 			//this._p.currentTime = 0;
 		},
 		

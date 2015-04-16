@@ -1,7 +1,7 @@
 define(function (require, exports, module) {
-	var Events = require("pkg!Event");
+	//var Events = require("pkg!Event");
 	var config = require("pkg!config");
-	var Rs = require("./Rs");
+	//var Rs = require("./Rs");
 	//console.log(config);
 	var Painter = require("./Board/Painter");
 	var Board = {
@@ -9,10 +9,10 @@ define(function (require, exports, module) {
 			console.group("board reset!!");
 			this._index = 0;
 			Painter.tool_clear.render();
-			console.info("清空画布！");
+			console.log("清空画布！");
 			Painter.reset();
-			console.info("painter reset!!");
-			console.info("block_elem reset!!");
+			console.log("painter reset!!");
+			console.log("block_elem reset!!");
 			console.groupEnd("board reset!!");
 			
 		},
@@ -25,10 +25,7 @@ define(function (require, exports, module) {
 			this._c_front = document.getElementById(frontId);
 			Painter.init(this._c_front, this._c_back);
 		},
-		
-		block_elem:{
-			
-		},
+
 		//判断能否播放
 		can_play : function(){
 			
@@ -57,10 +54,10 @@ define(function (require, exports, module) {
 			this._records = this._trail.records;
 			this._index = 0;
 			this._len = this._records.length;
-			console.log("-------trail info---------");
+			console.group("set trail");
 			console.log("records count:"+this._len);
 			console.log("now index:"+this._index);
-			console.log("-------trail info end---------");
+			console.groupEnd("set trail");
 		},
 		//播放到这个时间点
 		draw : function( t ){

@@ -24,6 +24,7 @@
 	//////////// 入口 /////////////////
 	requirejs(["pkg!core","bootstrap"], function (App) {
 	    var player = new App();
+	    //window.player = player;
 	    return player;
 	});
 	

@@ -1,5 +1,5 @@
 define(function (require, exports, module) {
-	console.log("load event");
+	//console.log("load event");
 	//var player = require("pkg!core");
 	//console.log(palyer);
 	//palyer.a = 1;
@@ -16,6 +16,21 @@ define(function (require, exports, module) {
 			return this;
 		},
 		
+		/**
+		 * 绑定某个方法到某个消息上，只调用一次。
+		 * @param name
+		 * @param callback
+		 * @param context
+		 * @returns
+		 */
+		once : function( name, callback, context ){
+			var self = this;
+			var once = function(){
+				self.off( name, once );
+				callback.apply(this,arguments);
+			};
+			return this.on( name, once, context );
+		},
 		
 		/**
 		 * 删除某个绑定的事件，如果函数都为空则全部删除 ，如果只有name则指删除此name的事件
@@ -72,13 +87,15 @@ define(function (require, exports, module) {
 		 * @returns {___anonymous235_2220}
 		 */
 		trigger: function(name) {
-			console.log("trigger->"+name);
-			console.log(this._events);
+			console.group("trigger->"+name);
+			console.log(arguments);
+			//console.log(this._events);
 		    if (!this._events) return this;
-		    console.info(arguments);
+		   
 		    var args = Array.prototype.slice.call(arguments,1);
 		    var events = this._events[name];
 		    if (events) triggerEvents(events, args);
+		    console.groupEnd("trigger->"+name);
 		    return this;
 		}
 				

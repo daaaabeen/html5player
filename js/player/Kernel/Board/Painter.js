@@ -20,7 +20,7 @@ define(function (require, exports, module) {
 		read_and_parse:function( obj , win ,fail ){
 			
 			var success = function(){
-				console.log(win);
+				//console.log(win);
 				this.push_obj_2_pages(obj);
 				this.push_obj_2_undo_stack(obj);
 				( typeof win === "function" ) && win();
@@ -223,27 +223,7 @@ define(function (require, exports, module) {
 				return this._pages[this._current_page] || (this._pages[this._current_page] = []);
 				
 			},
-			//插入一个页面
-			/*
-			insert_page : function(data , win, fail ){
-				
-				page = data.data;
-				var contxt = Painter.f_c.getContext("2d");
-				var w = Painter.f_c.width;
-				var h = Painter.f_c.height;
-				var imgData = contxt.getImageData( 0, 0, w, h );
-				this._pages[ this.current_page ] = imgData;
-				contxt.clearRect( 0, 0, w , h );
-				
-				for(var i = this._pages.length-1 ; i >= page-1; i--  ){
-					this._pages[i+1] = this._pages[i]; 
-				}
-				this._pages[ page-1 ] = contxt.getImageData( 0, 0, w, h );
-				this.current_page = page-1;
-				(typeof win === "function") && win();
-				
-			},
-			*/
+			
 			//下一页
 			next_page : function( obj,print,win,fail ){
 				
@@ -252,6 +232,7 @@ define(function (require, exports, module) {
 				(typeof win === "function") && win();
 			
 			},
+			//上一页
 			pre_page :function( obj,print,win ){
 				( this._current_page > 0 ) && this._current_page--;
 				print();
@@ -304,7 +285,7 @@ define(function (require, exports, module) {
 			
 			compute_line_width_from_speed : function( base_width, obj ){
 				var width = base_width;		
-				var level = 2; //平滑度
+				var level = 1; //平滑度
 				if( obj.phase != 0 ){
 					var l = Math.sqrt( ( obj.x - this._last_x ) * ( obj.x - this._last_x ) + ( obj.y - this._last_y ) * ( obj.y - this._last_y ) ); 
 					var v = ( obj.timestamp - this._last_t ) / l;//v的倒数
@@ -315,7 +296,7 @@ define(function (require, exports, module) {
 					var tmp_w = p * base_width;
 					
 					(width > tmp_w) && ( width = tmp_w );
-					console.info("width:", width ," x:", obj.x," y:",obj.y," l:",l," v:",v ); 
+					//console.info("width:", width ," x:", obj.x," y:",obj.y," l:",l," v:",v ); 
 				} 
 				if( obj.phase == 2 ){
 					this._last_t = this._last_x = this._last_y = this._base_v = void 0;
