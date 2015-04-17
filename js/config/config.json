@@ -4,6 +4,10 @@
 		"backId":"myCanvasBack"
 	},
 	"audio":{
-		"audioId":"audio"
+		"audioId":"audio",
+		"load_audio_timeout":20000
+	},
+	"board":{
+		"load_trail_timeout":20000
 	}
 }

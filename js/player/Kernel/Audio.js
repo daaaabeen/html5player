@@ -11,8 +11,11 @@ define(function (require, exports, module) {
 			this._p = document.getElementById(audioId);
 			
 			this._p.addEventListener( 'loadeddata', function(){
+				//console.debug("loadedata");
+				this._audio_loading_status  = void 0;
 				console.info("audio:loadeddata");
-			});
+				Events.trigger("Kernel:Control:play");
+			}.bind(this));
 
 			this._p.addEventListener( 'timeupdate', function(e){ //时间改变
 				Events.trigger("Kernel:Control:timechange",this.current_time());
@@ -54,8 +57,15 @@ define(function (require, exports, module) {
 			});
 			
 			this._p.addEventListener( 'progress', function(e){ //加载过程
-				
+				//console.info(e);
 			});
+			
+			this._p.addEventListener( 'error', function(e){ //出错时
+				Events.trigger("Kernel:Control:error","连接失败");
+				console.info("加载音频出错了");
+				//console.info(arguments);
+			});
+			
 		},
 		reset:function(){
 			console.group("Audio reset!!");
@@ -68,6 +78,17 @@ define(function (require, exports, module) {
 			console.log("set_src:"+src);
 			this._p.src = src;
 			this._p.load();
+			this._audio_loading_status = true;
+		//	console.debug("set_src");
+			var check_audio_timeout = function(){
+			//	console.debug("set_src1");
+				if(this._audio_loading_status){
+					this._audio_loading_status = void 0;
+					this._p.src = "";
+					Events.trigger("Kernel:Control:error","连接超时");
+				}
+			}.bind(this);
+			setTimeout(check_audio_timeout,config.config.audio.load_audio_timeout);
 		},
 		
 		//播放

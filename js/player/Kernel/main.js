@@ -19,6 +19,7 @@ define(function (require, exports, module) {
 			Events.on("Kernel:Control:mute", Kernel.control.mute, Kernel.control);
 			Events.on("Kernel:Control:set_volume", Kernel.control.set_volume, Kernel.control);
 			Events.on("Kernel:Control:seek_to", Kernel.control.seek_to, Kernel.control);
+			Events.on("Kernel:Control:error", Kernel.control.error, Kernel.control);
 		},
 		
 		status:function(){
@@ -63,7 +64,7 @@ define(function (require, exports, module) {
 		control : {
 			
 			//状态码
-			_code:{ init:0, play:1, pause:2, wait:3, stop:4 },
+			_code:{ init:0, play:1, pause:2, wait:3, stop:4, error:5 },
 			
 			status : function(){
 				switch(this._status){
@@ -78,6 +79,8 @@ define(function (require, exports, module) {
 					return "wait";
 				case this._code.stop:
 					return "stop";
+				case this._code.error:
+					return "error";
 				default:
 					return "nostatus";
 					
@@ -97,10 +100,13 @@ define(function (require, exports, module) {
 				Audio.reset();
 				Rs.reset();
 				Rs.init(url,Audio.set_src.bind(Audio),Board.set_trail.bind(Board),Audio.can_play.bind(Audio) );
-				typeof success == "function" && success();
+				//typeof success == "function" && success();
 			
 			},
-			
+			error : function(){
+				this.change_status(this._code.error);
+				Rs.reset();
+			},
 			//停止
 			stop:function(success){
 				this.change_status(this._code.stop);

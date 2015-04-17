@@ -13,6 +13,7 @@ define(function (require, exports, module) {
 			Events.on("Kernel:Control:stop", View.on_stop, View);
 			Events.on("Kernel:Control:wait", View.on_wait, View);
 			Events.on("Kernel:Control:pause", View.on_pause, View);
+			Events.on("Kernel:Control:error", View.on_error, View);
 			Events.on("Kernel:rs:inited",View.on_rs_inited,View);
 			Events.on("Kernel:Control:timechange",View.on_time_change,View);
 			Events.on("Kernel:Control:mute_change",View.on_mute_change,View);
@@ -27,6 +28,7 @@ define(function (require, exports, module) {
 		on_stop:function(){},
 		on_wait:function(){},
 		on_pause:function(){},
+		on_error:function(){},
 		on_rs_inited:function(){},
 		on_time_change:function(){},
 		on_mute_change:function(){},
@@ -50,14 +52,16 @@ define(function (require, exports, module) {
 		},
 		
 		start:function(url){
+			/*
 			var fun = function(){
 				this.play();
 			}.bind(this);
-			Events.trigger("Kernel:Control:start",url,fun);
+			*/
+			Events.trigger("Kernel:Control:start",url);
 		},
 		
 		play:function(url){	
-			if( Kernel.status() == "nostatus" || Kernel.status() == "stop"){
+			if( Kernel.status() == "nostatus" || Kernel.status() == "stop"  || Kernel.status() == "error"){
 				this.start(url);
 			}else{
 				Events.trigger("Kernel:Control:play");

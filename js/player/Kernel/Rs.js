@@ -17,13 +17,13 @@ define(function (require, exports, module) {
 			console.group("Rs::init");
 			if(this._hasinited)return ;
 			//console.log("src=\""+url+"/audio.mp3\"");
-			Audio_set_src( url+"/audio.mp3" );
-			
 			$.ajax({
 				url:url+"/event.json",
 				dataType:"json",
 				async : false,
+				timeout : config.config.board.load_trail_timeout,
 				success:function(data){
+					Audio_set_src( url+"/audio.mp3" );
 					//console.log(data);
 					Board_set_trail( data );
 					//图片预加载-----------------------------------------
@@ -58,11 +58,14 @@ define(function (require, exports, module) {
 						
 					}(data.records);
 					setTimeout(k_rs_preload,0);
+					
 					//图片预加载----------------------------------------
-				}
+				},
+				error:function(XHR, Status, e){//加载出错
+					console.error("加载轨迹文件失败");
+					Events.trigger("Kernel:Control:error","连接失败");
+				},
 			});
-			
-			
 			
 			var k_rs_inited = setInterval(function(){
 				if(Audio_can_play()){

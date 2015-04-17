@@ -98,6 +98,12 @@ define(function (require, exports, module) {
 			$("#msg").html("正在加载！");
 		},
 		
+		//当程序加载失败
+		on_error:function(){
+			console.log("on_error");
+			console.log(arguments);
+			$("#msg").html("网络出错！");
+		},
 		//当开始播放的时候
 		on_play:function(){
 			console.log("on_play");
