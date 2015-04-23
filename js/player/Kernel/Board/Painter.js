@@ -285,8 +285,8 @@ define(function (require, exports, module) {
 			
 			compute_line_width_from_speed : function( base_width, obj ){
 				var width = base_width;		
-				var level = 1; //平滑度
-				this._base_v = 0.001;
+				var level = 2; //平滑度
+				this._base_v = 0.0016;
 				if( obj.phase != 0 ){
 					var l = Math.sqrt( ( obj.x - this._last_x ) * ( obj.x - this._last_x ) + ( obj.y - this._last_y ) * ( obj.y - this._last_y ) ); 
 					var v = ( obj.timestamp - this._last_t ) / l;//v的倒数
@@ -336,7 +336,7 @@ define(function (require, exports, module) {
 					this._ctrl_point_y = this._last_render_y;
 					this._last_render_x = data.x;
 					this._last_render_y = data.y;
-					if( this._start_point_x && this._start_point_y && this._end_point_x && this._end_point_y ){
+					if( this._start_point_x && this._start_point_y  ){
 						contxt.beginPath(); 
 						contxt.lineJoin="round";
 						contxt.lineCap="round";
@@ -347,7 +347,6 @@ define(function (require, exports, module) {
 						contxt.stroke();
 					}
 
-					
 				}else{
 					
 					this._start_point_x = this._end_point_x;
