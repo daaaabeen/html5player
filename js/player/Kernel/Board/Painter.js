@@ -286,10 +286,11 @@ define(function (require, exports, module) {
 			compute_line_width_from_speed : function( base_width, obj ){
 				var width = base_width;		
 				var level = 1; //平滑度
+				this._base_v = 0.001;
 				if( obj.phase != 0 ){
 					var l = Math.sqrt( ( obj.x - this._last_x ) * ( obj.x - this._last_x ) + ( obj.y - this._last_y ) * ( obj.y - this._last_y ) ); 
 					var v = ( obj.timestamp - this._last_t ) / l;//v的倒数
-					this._base_v || (this._base_v = v);
+					console.debug(v);
 					var p = v / this._base_v ; 
 					for( var i = 0; i<level; p = Math.sqrt(p),i++ );
 					
@@ -316,28 +317,72 @@ define(function (require, exports, module) {
 				if( data.phase == 0 ){
 					//contxt.beginPath(); 
 					//contxt.moveTo( data.x, data.y ); // 移动到坐标 50 50 
+					this._start_point_x = void 0;
+					this._start_point_y = void 0;
+					this._ctrl_point_x = void 0;
+					this._ctrl_point_y = void 0;
+					this._end_point_x = void 0;
+					this._end_point_y = void 0;
 					this._last_render_x = data.x;
 					this._last_render_y = data.y;
 					
 				}else if( data.phase == 1 ){
-					contxt.beginPath(); 
-					contxt.lineJoin="round";
-					contxt.lineCap="round";
-					contxt.moveTo( this._last_render_x, this._last_render_y ); // 移动到坐标 
-					contxt.lineTo( data.x, data.y ); // 划出轨迹到 
-					contxt.stroke();
+					
+					this._start_point_x = this._end_point_x;
+					this._start_point_y = this._end_point_y;
+					this._end_point_x = (this._last_render_x + data.x) / 2;
+					this._end_point_y = (this._last_render_y + data.y) / 2;
+					this._ctrl_point_x = this._last_render_x;
+					this._ctrl_point_y = this._last_render_y;
 					this._last_render_x = data.x;
 					this._last_render_y = data.y;
+					if( this._start_point_x && this._start_point_y && this._end_point_x && this._end_point_y ){
+						contxt.beginPath(); 
+						contxt.lineJoin="round";
+						contxt.lineCap="round";
+						//contxt.moveTo( this._last_render_x, this._last_render_y ); // 移动到坐标 
+						contxt.moveTo( this._start_point_x, this._start_point_y ); // 移动到坐标 
+						contxt.quadraticCurveTo( this._ctrl_point_x, this._ctrl_point_y, this._end_point_x, this._end_point_y);
+						//contxt.lineTo( data.x, data.y ); // 划出轨迹到 
+						contxt.stroke();
+					}
+
+					
 				}else{
+					
+					this._start_point_x = this._end_point_x;
+					this._start_point_y = this._end_point_y;
+					this._end_point_x = (this._last_render_x + data.x) / 2;
+					this._end_point_y = (this._last_render_y + data.y) / 2;
+					this._ctrl_point_x = this._last_render_x;
+					this._ctrl_point_y = this._last_render_y;
+					this._last_render_x = data.x;
+					this._last_render_y = data.y;
+					
 					contxt.beginPath(); 
 					contxt.lineJoin="round";
 					contxt.lineCap="round";
-					contxt.moveTo( this._last_render_x, this._last_render_y ); // 移动到坐标 
-					contxt.lineTo( data.x, data.y ); // 划出轨迹到 
+					//contxt.moveTo( this._last_render_x, this._last_render_y ); // 移动到坐标 
+					//contxt.lineTo( data.x, data.y ); // 划出轨迹到 
+					contxt.moveTo( this._start_point_x, this._start_point_y ); // 移动到坐标 
+					contxt.quadraticCurveTo( this._ctrl_point_x, this._ctrl_point_y, this._end_point_x, this._end_point_y );
 					contxt.stroke();
-					this._last_render_x = this._last_render_y = void 0;
+					this._start_point_x = void 0;
+					this._start_point_y = void 0;
+					this._ctrl_point_x = void 0;
+					this._ctrl_point_y = void 0;
+					this._end_point_x = void 0;
+					this._end_point_y = void 0;
+					this._last_render_x = void 0;
+					this._last_render_y = void 0;
 					this.del_context(data.strokeId);
 				}
+				
+				/*if( this._start_point_x && this._start_point_y ){
+					
+				}*/
+				
+				
 				
 			},
 			
