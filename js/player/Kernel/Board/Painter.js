@@ -287,9 +287,10 @@ define(function (require, exports, module) {
 				var width = base_width;		
 				var level = 2; //平滑度
 				this._base_v = 0.0016;
+				obj.strokeTime || (obj.strokeTime = obj.timestamp);
 				if( obj.phase != 0 ){
 					var l = Math.sqrt( ( obj.x - this._last_x ) * ( obj.x - this._last_x ) + ( obj.y - this._last_y ) * ( obj.y - this._last_y ) ); 
-					var v = ( obj.timestamp - this._last_t ) / l;//v的倒数
+					var v = ( obj.strokeTime - this._last_t ) / l;//v的倒数
 					console.debug(v);
 					var p = v / this._base_v ; 
 					for( var i = 0; i<level; p = Math.sqrt(p),i++ );
@@ -302,7 +303,7 @@ define(function (require, exports, module) {
 				if( obj.phase == 2 ){
 					this._last_t = this._last_x = this._last_y = this._base_v = void 0;
 				}else{
-					this._last_t = obj.timestamp;
+					this._last_t = obj.strokeTime;
 					this._last_x = obj.x;
 					this._last_y = obj.y;
 				}
@@ -419,7 +420,11 @@ define(function (require, exports, module) {
 					if( img.complete ){
 						
 						var ctx=Painter.b_c.getContext("2d");
-						ctx.drawImage( img, obj.x, obj.y, obj.width, obj.height );
+						try{
+							ctx.drawImage( img, obj.x, obj.y, obj.width, obj.height );
+						}catch(e){
+							console.error(e);
+						}
 						(typeof win == "function") && win();
 					}
 					else{
@@ -442,7 +447,11 @@ define(function (require, exports, module) {
 						var canvas = Painter.b_c;
 						var ctx= canvas.getContext("2d");
 						ctx.clearRect( 0, 0, canvas.width, canvas.height );
-						ctx.drawImage( img, obj.x, obj.y, obj.width, obj.height );
+						try{
+							ctx.drawImage( img, obj.x, obj.y, obj.width, obj.height );
+						}catch(e){
+							console.error(e);
+						}
 						(typeof win == "function") && win();
 					}
 					else{
