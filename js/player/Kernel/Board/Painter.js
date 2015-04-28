@@ -38,9 +38,10 @@ define(function (require, exports, module) {
 				}else if( type == 3 ){//设置混合模式（正常或者擦除）
 					this.set_painter_mode(obj.data);
 					success();
-				}else if( type == 4 ){//翻到下一页 
-					this.tool_page.next_page( obj , this.turn_page_print.bind(this), success );
-					
+				}else if( type == 4 ){//添加 空白页 
+					this.tool_page.next_page( obj , this.turn_page_print.bind(this), success );	
+				}else if( type == 5 ){//添加 空白页 
+					this.tool_page.next_page( obj , this.turn_page_print.bind(this), success );	
 				}else if( type == 6 ){//幻灯片翻到上一页
 					this.tool_page.pre_page( obj, this.turn_page_print.bind(this), success );
 				}else{
